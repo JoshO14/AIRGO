@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Airgo Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0F3460;
+    --navy-dark: #091f3c;
+    --navy-mid: #1a4a7a;
+    --amber: #E8B84B;
+    --amber-light: #fdf3d9;
+    --green: #1D9E75;
+    --green-light: #E1F5EE;
+    --red: #E24B4A;
+    --red-light: #FCEBEB;
+    --blue-light: #E6F1FB;
+    --text: #1a1a2e;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --bg: #f4f6fa;
+    --surface: #ffffff;
+    --border: #e5e7eb;
+    --sidebar-w: 220px;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-w); background: var(--navy-dark); color: #fff;
+    display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100;
+  }
+  .sidebar-brand {
+    padding: 20px 20px 16px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .brand-mark {
+    width: 34px; height: 34px; background: var(--amber); border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--navy-dark);
+  }
+  .brand-text { font-size: 18px; font-weight: 600; letter-spacing: 1px; }
+  .brand-sub { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; margin-top: 1px; }
+
+  .nav-section { padding: 16px 12px 8px; font-size: 10px; font-weight: 500; color: rgba(255,255,255,0.3); letter-spacing: 1px; text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px;
+    margin: 2px 8px; cursor: pointer; color: rgba(255,255,255,0.6); font-size: 13px; transition: all 0.15s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+  .nav-item.active { background: rgba(232,184,75,0.15); color: var(--amber); }
+  .nav-item i { font-size: 17px; }
+  .nav-badge {
+    margin-left: auto; background: var(--red); color: #fff;
+    font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 10px;
+  }
+  .sidebar-footer {
+    margin-top: auto; padding: 16px; border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .admin-avatar {
+    width: 34px; height: 34px; background: var(--amber); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--navy-dark);
+  }
+  .admin-name { font-size: 13px; color: rgba(255,255,255,0.85); font-weight: 500; }
+  .admin-role { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
+
+  /* MAIN */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 28px; height: 60px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 50;
+  }
+  .page-title { font-size: 16px; font-weight: 600; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .topbar-btn {
+    width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); font-size: 17px; position: relative;
+  }
+  .notif-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; background: var(--red); border-radius: 50%; border: 2px solid var(--surface); }
+  .date-chip {
+    background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+    padding: 6px 12px; font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace;
+  }
+
+  .content { padding: 24px 28px; flex: 1; }
+
+  /* PANELS */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* KPI GRID */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi-card {
+    background: var(--surface); border-radius: 14px; padding: 18px 20px;
+    border: 1px solid var(--border); position: relative; overflow: hidden;
+  }
+  .kpi-label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .kpi-value { font-size: 28px; font-weight: 600; line-height: 1; margin-bottom: 6px; }
+  .kpi-change {
+    font-size: 12px; display: flex; align-items: center; gap: 4px; font-weight: 500;
+  }
+  .kpi-change.up { color: var(--green); }
+  .kpi-change.down { color: var(--red); }
+  .kpi-icon {
+    position: absolute; right: 16px; top: 16px; width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+  }
+  .kpi-icon.amber { background: var(--amber-light); color: var(--amber); }
+  .kpi-icon.green { background: var(--green-light); color: var(--green); }
+  .kpi-icon.blue { background: var(--blue-light); color: var(--navy); }
+  .kpi-icon.red { background: var(--red-light); color: var(--red); }
+
+  /* GRID 2-COL */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .grid-3-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  /* CARD */
+  .card { background: var(--surface); border-radius: 14px; border: 1px solid var(--border); overflow: hidden; }
+  .card-header {
+    padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+  }
+  .card-title { font-size: 14px; font-weight: 600; }
+  .card-action { font-size: 12px; color: var(--navy); cursor: pointer; font-weight: 500; }
+  .card-body { padding: 16px 20px; }
+
+  /* CHART BARS */
+  .bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 140px; padding: 0 0 8px; }
+  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+  .bar {
+    width: 100%; border-radius: 6px 6px 0 0; background: var(--blue-light);
+    transition: all 0.3s; cursor: pointer; position: relative;
+  }
+  .bar.primary { background: var(--navy); }
+  .bar:hover { opacity: 0.8; }
+  .bar-label { font-size: 10px; color: var(--text-light); font-family: 'DM Mono', monospace; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .data-table th { padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; background: var(--bg); border-bottom: 1px solid var(--border); }
+  .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: var(--bg); }
+  .td-user { display: flex; align-items: center; gap: 10px; }
+  .td-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .badge-green { background: var(--green-light); color: #085041; }
+  .badge-amber { background: var(--amber-light); color: #633806; }
+  .badge-red { background: var(--red-light); color: #791F1F; }
+  .badge-blue { background: var(--blue-light); color: #0C447C; }
+  .badge-gray { background: #f3f4f6; color: #6b7280; }
+
+  /* PROGRESS */
+  .progress-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .progress-label { font-size: 12px; color: var(--text); min-width: 120px; }
+  .progress-track { flex: 1; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; background: var(--navy); }
+  .progress-fill.amber { background: var(--amber); }
+  .progress-fill.green { background: var(--green); }
+  .progress-val { font-size: 12px; font-weight: 500; color: var(--text-muted); min-width: 36px; text-align: right; font-family: 'DM Mono', monospace; }
+
+  /* MINI STATS */
+  .mini-stat { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .mini-stat:last-child { border-bottom: none; }
+  .mini-stat-label { font-size: 12px; color: var(--text-muted); }
+  .mini-stat-value { font-size: 13px; font-weight: 600; font-family: 'DM Mono', monospace; }
+
+  /* AIRPORT PILLS */
+  .airport-list { display: flex; flex-direction: column; gap: 10px; }
+  .airport-row { display: flex; align-items: center; gap: 12px; }
+  .airport-code { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; color: var(--navy); min-width: 36px; }
+  .airport-info { flex: 1; }
+  .airport-name { font-size: 12px; color: var(--text); font-weight: 500; }
+  .airport-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  .airport-bar-track { width: 80px; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .airport-bar-fill { height: 100%; border-radius: 3px; }
+  .airport-count { font-size: 12px; font-weight: 600; color: var(--text); min-width: 30px; text-align: right; font-family: 'DM Mono', monospace; }
+
+  /* USERS TABLE PANEL */
+  .search-bar {
+    display: flex; gap: 12px; margin-bottom: 16px; align-items: center;
+  }
+  .search-input {
+    flex: 1; padding: 9px 14px 9px 38px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; font-family: 'DM Sans', sans-serif; background: var(--surface); color: var(--text);
+    position: relative;
+  }
+  .search-wrap { position: relative; flex: 1; }
+  .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 16px; }
+  .filter-btn {
+    padding: 9px 16px; border: 1px solid var(--border); border-radius: 8px;
+    font-size: 13px; background: var(--surface); color: var(--text); cursor: pointer; display: flex; align-items: center; gap: 6px;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .action-btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    font-size: 12px; cursor: pointer; background: transparent; color: var(--text); font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .action-btn.danger { color: var(--red); border-color: #f0c5c5; }
+  .action-btn.primary { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+  /* TRIP MAP PLACEHOLDER */
+  .map-placeholder {
+    background: linear-gradient(135deg, #e8f0fe 0%, #d1e3fa 100%);
+    border-radius: 10px; height: 200px; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 8px; color: var(--navy); position: relative; overflow: hidden;
+  }
+  .map-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(15,52,96,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(15,52,96,0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  .map-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--navy); border: 3px solid white; position: absolute; }
+  .map-dot.active { background: var(--green); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(29,158,117,0.4); } 50% { box-shadow: 0 0 0 8px rgba(29,158,117,0); } }
+
+  /* PRICING */
+  .pricing-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .pricing-row:last-child { border-bottom: none; }
+  .pricing-label { flex: 1; font-size: 13px; color: var(--text); }
+  .pricing-input {
+    width: 80px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px;
+    font-size: 13px; text-align: right; font-family: 'DM Mono', monospace; color: var(--text);
+    background: var(--bg);
+  }
+  .pricing-unit { font-size: 12px; color: var(--text-muted); min-width: 20px; }
+
+  /* ALERTS */
+  .alert-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .alert-item:last-child { border-bottom: none; }
+  .alert-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 4px; flex-shrink: 0; }
+  .alert-text { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .alert-time { font-size: 11px; color: var(--text-light); margin-top: 2px; font-family: 'DM Mono', monospace; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 800px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; }
+    .grid-2, .grid-3-1 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark"><i class="ti ti-plane"></i></div>
+    <div>
+      <div class="brand-text">AIRGO</div>
+      <div class="brand-sub">Admin Console</div>
+    </div>
+  </div>
+
+  <div class="nav-section">Overview</div>
+  <div class="nav-item active" onclick="switchPanel('dashboard', this)"><i class="ti ti-dashboard"></i> Dashboard</div>
+  <div class="nav-item" onclick="switchPanel('analytics', this)"><i class="ti ti-chart-bar"></i> Analytics</div>
+
+  <div class="nav-section">Operations</div>
+  <div class="nav-item" onclick="switchPanel('trips', this)"><i class="ti ti-route"></i> Trips <span class="nav-badge">12</span></div>
+  <div class="nav-item" onclick="switchPanel('users', this)"><i class="ti ti-users"></i> Users</div>
+  <div class="nav-item" onclick="switchPanel('drivers', this)"><i class="ti ti-steering-wheel"></i> Drivers</div>
+  <div class="nav-item" onclick="switchPanel('disputes', this)"><i class="ti ti-alert-triangle"></i> Disputes <span class="nav-badge">3</span></div>
+
+  <div class="nav-section">Settings</div>
+  <div class="nav-item" onclick="switchPanel('pricing', this)"><i class="ti ti-coin"></i> Pricing Rules</div>
+  <div class="nav-item" onclick="switchPanel('airports', this)"><i class="ti ti-plane-departure"></i> Airports</div>
+
+  <div class="sidebar-footer">
+    <div class="admin-avatar">SA</div>
+    <div>
+      <div class="admin-name">Super Admin</div>
+      <div class="admin-role">airgo.ng</div>
+    </div>
+    <i class="ti ti-logout" style="margin-left:auto;color:rgba(255,255,255,0.3);cursor:pointer;font-size:16px;"></i>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="page-title">Dashboard</div>
+    <div class="topbar-right">
+      <div class="date-chip" id="live-date">—</div>
+      <button class="topbar-btn"><i class="ti ti-search"></i></button>
+      <button class="topbar-btn"><i class="ti ti-bell"></i><div class="notif-dot"></div></button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD PANEL -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon amber"><i class="ti ti-route"></i></div>
+          <div class="kpi-label">Active trips today</div>
+          <div class="kpi-value">148</div>
+          <div class="kpi-change up"><i class="ti ti-trending-up"></i> +18% vs yesterday</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon green"><i class="ti ti-users"></i></div>
+          <div class="kpi-label">Monthly active users</div>
+          <div class="kpi-value">3,241</div>
+          <div class="kpi-change up"><i class="ti ti-trending-up"></i> +12.4% this month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon blue"><i class="ti ti-coin"></i></div>
+          <div class="kpi-label">Gross revenue (MTD)</div>
+          <div class="kpi-value">₦2.1M</div>
+          <div class="kpi-change up"><i class="ti ti-trending-up"></i> +24.7% vs last month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon red"><i class="ti ti-percentage"></i></div>
+          <div class="kpi-label">Avg match rate</div>
+          <div class="kpi-value">78%</div>
+          <div class="kpi-change down"><i class="ti ti-trending-down"></i> -2.1% this week</div>
+        </div>
+      </div>
+
+      <div class="grid-3-1">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Trip volume — last 14 days</span>
+            <span class="card-action">Export CSV</span>
+          </div>
+          <div class="card-body">
+            <div class="bar-chart" id="trip-chart"></div>
+            <div style="display:flex;gap:16px;margin-top:8px;">
+              <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);"><span style="width:10px;height:10px;border-radius:3px;background:var(--navy);display:inline-block;"></span> Completed</span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-muted);"><span style="width:10px;height:10px;border-radius:3px;background:var(--blue-light);display:inline-block;"></span> Upcoming</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Airport activity</span></div>
+          <div class="card-body">
+            <div class="airport-list">
+              <div class="airport-row">
+                <div class="airport-code">LOS</div>
+                <div class="airport-info">
+                  <div class="airport-name">Lagos (MMIA)</div>
+                  <div class="airport-sub">62 trips today</div>
+                </div>
+                <div class="airport-bar-track"><div class="airport-bar-fill" style="width:80%;background:var(--navy);"></div></div>
+                <div class="airport-count">62</div>
+              </div>
+              <div class="airport-row">
+                <div class="airport-code">ABV</div>
+                <div class="airport-info">
+                  <div class="airport-name">Abuja (NAIA)</div>
+                  <div class="airport-sub">41 trips today</div>
+                </div>
+                <div class="airport-bar-track"><div class="airport-bar-fill" style="width:53%;background:var(--amber);"></div></div>
+                <div class="airport-count">41</div>
+              </div>
+              <div class="airport-row">
+                <div class="airport-code">PHC</div>
+                <div class="airport-info">
+                  <div class="airport-name">Port Harcourt</div>
+                  <div class="airport-sub">28 trips today</div>
+                </div>
+                <div class="airport-bar-track"><div class="airport-bar-fill" style="width:36%;background:var(--green);"></div></div>
+                <div class="airport-count">28</div>
+              </div>
+              <div class="airport-row">
+                <div class="airport-code">QUO</div>
+                <div class="airport-info">
+                  <div class="airport-name">Uyo (VAIA)</div>
+                  <div class="airport-sub">24 trips today</div>
+                </div>
+                <div class="airport-bar-track"><div class="airport-bar-fill" style="width:31%;background:var(--amber);"></div></div>
+                <div class="airport-count">24</div>
+              </div>
+              <div class="airport-row">
+                <div class="airport-code">ENU</div>
+                <div class="airport-info">
+                  <div class="airport-name">Enugu (AAIA)</div>
+                  <div class="airport-sub">17 trips today</div>
+                </div>
+                <div class="airport-bar-track"><div class="airport-bar-fill" style="width:22%;background:var(--red);"></div></div>
+                <div class="airport-count">17</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Recent trips</span><span class="card-action" onclick="switchPanel('trips', document.querySelector('[onclick*=trips]'))">View all</span></div>
+          <div class="card-body" style="padding:0;">
+            <table class="data-table">
+              <thead><tr><th>Passenger</th><th>Route</th><th>Fare</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td><div class="td-user"><div class="td-avatar" style="background:#E6F1FB;color:#0C447C;">AT</div>Amaka T.</div></td><td>Lekki→LOS</td><td style="font-family:'DM Mono',monospace;">₦4,200</td><td><span class="badge badge-green">Completed</span></td></tr>
+                <tr><td><div class="td-user"><div class="td-avatar" style="background:#E1F5EE;color:#085041;">KO</div>Kemi O.</div></td><td>Ajah→LOS</td><td style="font-family:'DM Mono',monospace;">₦3,800</td><td><span class="badge badge-blue">In progress</span></td></tr>
+                <tr><td><div class="td-user"><div class="td-avatar" style="background:#FAEEDA;color:#633806;">DA</div>David A.</div></td><td>VI→ABV</td><td style="font-family:'DM Mono',monospace;">₦6,100</td><td><span class="badge badge-amber">Matching</span></td></tr>
+                <tr><td><div class="td-user"><div class="td-avatar" style="background:#FBEAF0;color:#72243E;">MJ</div>Mary J.</div></td><td>Ikeja→LOS</td><td style="font-family:'DM Mono',monospace;">₦2,900</td><td><span class="badge badge-green">Completed</span></td></tr>
+                <tr><td><div class="td-user"><div class="td-avatar" style="background:#FCEBEB;color:#791F1F;">BI</div>Bode I.</div></td><td>Ikoyi→LOS</td><td style="font-family:'DM Mono',monospace;">₦5,100</td><td><span class="badge badge-red">Cancelled</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">System alerts</span><span class="card-action">Mark all read</span></div>
+          <div class="card-body">
+            <div class="alert-item">
+              <div class="alert-dot" style="background:var(--red);"></div>
+              <div><div class="alert-text">Dispute raised on trip #1042 — passenger vs driver</div><div class="alert-time">10 min ago</div></div>
+            </div>
+            <div class="alert-item">
+              <div class="alert-dot" style="background:var(--amber);"></div>
+              <div><div class="alert-text">Driver Emeka O. KYC documents pending review (3 days)</div><div class="alert-time">2 hrs ago</div></div>
+            </div>
+            <div class="alert-item">
+              <div class="alert-dot" style="background:var(--green);"></div>
+              <div><div class="alert-text">Matching rate improved to 78% in Lagos after routing update</div><div class="alert-time">5 hrs ago</div></div>
+            </div>
+            <div class="alert-item">
+              <div class="alert-dot" style="background:var(--navy);"></div>
+              <div><div class="alert-text">New corporate account: Sterling Bank — 42 employees enrolled</div><div class="alert-time">Yesterday</div></div>
+            </div>
+            <div class="alert-item">
+              <div class="alert-dot" style="background:var(--amber);"></div>
+              <div><div class="alert-text">Peak demand expected at LOS tomorrow 06:00–09:00</div><div class="alert-time">Yesterday</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS PANEL -->
+    <div class="panel" id="panel-analytics">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon amber"><i class="ti ti-trending-up"></i></div>
+          <div class="kpi-label">Gross booking value</div>
+          <div class="kpi-value">₦18.4M</div>
+          <div class="kpi-change up"><i class="ti ti-trending-up"></i> +31% this quarter</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon green"><i class="ti ti-user-plus"></i></div>
+          <div class="kpi-label">New registrations</div>
+          <div class="kpi-value">284</div>
+          <div class="kpi-change up"><i class="ti ti-trending-up"></i> +8% this week</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon blue"><i class="ti ti-car"></i></div>
+          <div class="kpi-label">Occupancy rate</div>
+          <div class="kpi-value">72%</div>
+          <div class="kpi-change up"><i class="ti ti-trending-up"></i> +3% vs target</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon red"><i class="ti ti-star"></i></div>
+          <div class="kpi-label">Avg driver rating</div>
+          <div class="kpi-value">4.7</div>
+          <div class="kpi-change up"><i class="ti ti-trending-up"></i> Consistent</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Revenue breakdown</span></div>
+          <div class="card-body">
+            <div class="progress-row"><span class="progress-label">Service fees (10%)</span><div class="progress-track"><div class="progress-fill" style="width:65%;"></div></div><span class="progress-val">₦1.84M</span></div>
+            <div class="progress-row"><span class="progress-label">Premium subs</span><div class="progress-track"><div class="progress-fill amber" style="width:22%;"></div></div><span class="progress-val">₦610k</span></div>
+            <div class="progress-row"><span class="progress-label">Corporate accounts</span><div class="progress-track"><div class="progress-fill green" style="width:13%;"></div></div><span class="progress-val">₦360k</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Key metrics</span></div>
+          <div class="card-body">
+            <div class="mini-stat"><span class="mini-stat-label">Ride completion rate</span><span class="mini-stat-value" style="color:var(--green);">91.4%</span></div>
+            <div class="mini-stat"><span class="mini-stat-label">Avg fare saved / passenger</span><span class="mini-stat-value">₦5,200</span></div>
+            <div class="mini-stat"><span class="mini-stat-label">Driver acceptance rate</span><span class="mini-stat-value">88.2%</span></div>
+            <div class="mini-stat"><span class="mini-stat-label">Avg match time</span><span class="mini-stat-value">4.2 min</span></div>
+            <div class="mini-stat"><span class="mini-stat-label">Churn rate (monthly)</span><span class="mini-stat-value" style="color:var(--red);">3.1%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRIPS PANEL -->
+    <div class="panel" id="panel-trips">
+      <div class="search-bar">
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input class="search-input" type="text" placeholder="Search trips by ID, passenger, route…" oninput="filterTrips(this.value)">
+        </div>
+        <button class="filter-btn"><i class="ti ti-filter"></i> Filter</button>
+        <button class="filter-btn" style="background:var(--navy);color:#fff;border-color:var(--navy);">+ New trip</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0;">
+          <table class="data-table" id="trips-table">
+            <thead><tr><th>Trip ID</th><th>Passenger</th><th>Route</th><th>Date/Time</th><th>Passengers</th><th>Fare (each)</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="trips-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- USERS PANEL -->
+    <div class="panel" id="panel-users">
+      <div class="search-bar">
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input class="search-input" type="text" placeholder="Search users by name, email, phone…">
+        </div>
+        <button class="filter-btn"><i class="ti ti-filter"></i> Filter</button>
+        <button class="filter-btn">Export</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>User</th><th>Email</th><th>Phone</th><th>Trips</th><th>Rating</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRIVERS PANEL -->
+    <div class="panel" id="panel-drivers">
+      <div class="search-bar">
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input class="search-input" type="text" placeholder="Search drivers…">
+        </div>
+        <button class="filter-btn"><i class="ti ti-filter"></i> Filter</button>
+        <button class="filter-btn" style="background:var(--navy);color:#fff;border-color:var(--navy);">+ Add driver</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>Driver</th><th>Vehicle</th><th>Airport Zone</th><th>Trips</th><th>Rating</th><th>KYC</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="drivers-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DISPUTES PANEL -->
+    <div class="panel" id="panel-disputes">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Open disputes (3)</span></div>
+        <div class="card-body" style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Trip</th><th>Reporter</th><th>Issue</th><th>Opened</th><th>Priority</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:'DM Mono',monospace;">#D-041</td><td>#T-1042</td><td>Amaka T.</td><td>Driver no-show for 20 mins</td><td>Jun 4, 09:12</td><td><span class="badge badge-red">High</span></td><td><button class="action-btn primary">Resolve</button></td></tr>
+              <tr><td style="font-family:'DM Mono',monospace;">#D-040</td><td>#T-1031</td><td>James B.</td><td>Overcharged by ₦1,200</td><td>Jun 3, 18:44</td><td><span class="badge badge-amber">Medium</span></td><td><button class="action-btn primary">Resolve</button></td></tr>
+              <tr><td style="font-family:'DM Mono',monospace;">#D-039</td><td>#T-1018</td><td>Kemi O.</td><td>Co-passenger was rude</td><td>Jun 3, 12:30</td><td><span class="badge badge-gray">Low</span></td><td><button class="action-btn primary">Resolve</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRICING PANEL -->
+    <div class="panel" id="panel-pricing">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Service fee settings</span></div>
+          <div class="card-body">
+            <div class="pricing-row"><span class="pricing-label">Base service fee</span><input class="pricing-input" value="10"><span class="pricing-unit">%</span></div>
+            <div class="pricing-row"><span class="pricing-label">Premium member fee</span><input class="pricing-input" value="6"><span class="pricing-unit">%</span></div>
+            <div class="pricing-row"><span class="pricing-label">Corporate account fee</span><input class="pricing-input" value="8"><span class="pricing-unit">%</span></div>
+            <div class="pricing-row"><span class="pricing-label">Surge multiplier (peak)</span><input class="pricing-input" value="1.3"><span class="pricing-unit">×</span></div>
+            <div class="pricing-row"><span class="pricing-label">Minimum fare</span><input class="pricing-input" value="1500"><span class="pricing-unit">₦</span></div>
+            <div style="margin-top:16px;"><button class="action-btn primary" style="padding:9px 20px;font-size:13px;">Save changes</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Premium membership</span></div>
+          <div class="card-body">
+            <div class="pricing-row"><span class="pricing-label">Monthly subscription</span><input class="pricing-input" value="3500"><span class="pricing-unit">₦</span></div>
+            <div class="pricing-row"><span class="pricing-label">Annual subscription</span><input class="pricing-input" value="35000"><span class="pricing-unit">₦</span></div>
+            <div class="pricing-row"><span class="pricing-label">Priority match boost</span><input class="pricing-input" value="2"><span class="pricing-unit">×</span></div>
+            <div style="margin-top:16px;"><button class="action-btn primary" style="padding:9px 20px;font-size:13px;">Save changes</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AIRPORTS PANEL -->
+    <div class="panel" id="panel-airports">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Active airports</span><button class="action-btn primary">+ Add airport</button></div>
+        <div class="card-body" style="padding:0;">
+          <table class="data-table">
+            <thead><tr><th>Code</th><th>Name</th><th>City</th><th>Active trips</th><th>Drivers assigned</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td style="font-family:'DM Mono',monospace;font-weight:600;">LOS</td><td>Murtala Muhammed Intl</td><td>Lagos</td><td>62</td><td>38</td><td><span class="badge badge-green">Active</span></td><td><button class="action-btn">Edit</button></td></tr>
+              <tr><td style="font-family:'DM Mono',monospace;font-weight:600;">ABV</td><td>Nnamdi Azikiwe Intl</td><td>Abuja</td><td>41</td><td>22</td><td><span class="badge badge-green">Active</span></td><td><button class="action-btn">Edit</button></td></tr>
+              <tr><td style="font-family:'DM Mono',monospace;font-weight:600;">PHC</td><td>Port Harcourt Intl</td><td>Port Harcourt</td><td>28</td><td>15</td><td><span class="badge badge-green">Active</span></td><td><button class="action-btn">Edit</button></td></tr>
+              <tr><td style="font-family:'DM Mono',monospace;font-weight:600;">QUO</td><td>Victor Attah Intl</td><td>Uyo</td><td>24</td><td>13</td><td><span class="badge badge-green">Active</span></td><td><button class="action-btn">Edit</button></td></tr>
+              <tr><td style="font-family:'DM Mono',monospace;font-weight:600;">ENU</td><td>Akanu Ibiam Intl</td><td>Enugu</td><td>17</td><td>9</td><td><span class="badge badge-amber">Limited</span></td><td><button class="action-btn">Edit</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// Live clock
+function updateClock() {
+  const now = new Date();
+  document.getElementById('live-date').textContent = now.toLocaleString('en-NG', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+updateClock(); setInterval(updateClock, 1000);
+
+// Panel switching
+const panelTitles = { dashboard:'Dashboard', analytics:'Analytics', trips:'Trips', users:'Users', drivers:'Drivers', disputes:'Disputes', pricing:'Pricing Rules', airports:'Airports' };
+function switchPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('page-title').textContent = panelTitles[id] || id;
+}
+
+// Bar chart
+const tripData = [88,102,95,118,140,132,127,145,138,152,148,160,142,148];
+const labels = ['24M','25M','26M','27M','28M','29M','30M','31M','1J','2J','3J','4J','5J','6J'];
+const chart = document.getElementById('trip-chart');
+const maxVal = Math.max(...tripData);
+tripData.forEach((v, i) => {
+  const col = document.createElement('div');
+  col.className = 'bar-col';
+  const bar = document.createElement('div');
+  bar.className = 'bar' + (i >= 10 ? ' primary' : '');
+  bar.style.height = Math.round((v / maxVal) * 120) + 'px';
+  bar.title = labels[i] + ': ' + v + ' trips';
+  const lbl = document.createElement('div');
+  lbl.className = 'bar-label';
+  lbl.textContent = labels[i];
+  col.appendChild(bar); col.appendChild(lbl);
+  chart.appendChild(col);
+});
+
+// Trips data
+const tripsData = [
+  { id:'#T-1048', passenger:'Amaka T.', route:'Lekki → LOS', datetime:'12 Jun, 07:45', pax:3, fare:'₦4,200', status:'completed' },
+  { id:'#T-1047', passenger:'David A.', route:'VI → LOS', datetime:'12 Jun, 08:00', pax:4, fare:'₦3,900', status:'in-progress' },
+  { id:'#T-1046', passenger:'Kemi O.', route:'Ajah → LOS', datetime:'12 Jun, 08:10', pax:2, fare:'₦5,200', status:'in-progress' },
+  { id:'#T-1045', passenger:'James B.', route:'Ikeja → ABV', datetime:'12 Jun, 09:30', pax:3, fare:'₦6,100', status:'matching' },
+  { id:'#T-1044', passenger:'Mary J.', route:'Surulere → LOS', datetime:'12 Jun, 06:30', pax:4, fare:'₦2,900', status:'completed' },
+  { id:'#T-1043', passenger:'Bode I.', route:'Ikoyi → LOS', datetime:'11 Jun, 15:00', pax:2, fare:'₦5,100', status:'cancelled' },
+  { id:'#T-1042', passenger:'Tunde R.', route:'Magodo → LOS', datetime:'11 Jun, 12:00', pax:3, fare:'₦3,400', status:'completed' },
+];
+function statusBadge(s) {
+  const map = { completed:'badge-green', 'in-progress':'badge-blue', matching:'badge-amber', cancelled:'badge-red' };
+  return `<span class="badge ${map[s]||'badge-gray'}">${s}</span>`;
+}
+function renderTrips(data) {
+  document.getElementById('trips-tbody').innerHTML = data.map(t => `
+    <tr><td style="font-family:'DM Mono',monospace;">${t.id}</td><td>${t.passenger}</td><td>${t.route}</td><td>${t.datetime}</td>
+    <td><span class="badge badge-blue">${t.pax} riders</span></td>
+    <td style="font-family:'DM Mono',monospace;">${t.fare}</td><td>${statusBadge(t.status)}</td>
+    <td><button class="action-btn">View</button> <button class="action-btn danger">Cancel</button></td></tr>
+  `).join('');
+}
+renderTrips(tripsData);
+function filterTrips(q) {
+  renderTrips(tripsData.filter(t => t.passenger.toLowerCase().includes(q.toLowerCase()) || t.route.toLowerCase().includes(q.toLowerCase()) || t.id.includes(q)));
+}
+
+// Users data
+const usersData = [
+  { name:'Amaka T.', initials:'AT', col:'#E6F1FB', tcol:'#0C447C', email:'amaka@email.com', phone:'+234 801 234 5678', trips:34, rating:4.9, status:'active' },
+  { name:'David A.', initials:'DA', col:'#FAEEDA', tcol:'#633806', email:'david@corp.ng', phone:'+234 802 345 6789', trips:24, rating:4.8, status:'active' },
+  { name:'Kemi O.', initials:'KO', col:'#E1F5EE', tcol:'#085041', email:'kemi@gmail.com', phone:'+234 803 456 7890', trips:18, rating:4.7, status:'active' },
+  { name:'Mary J.', initials:'MJ', col:'#FBEAF0', tcol:'#72243E', email:'mary@uni.edu', phone:'+234 804 567 8901', trips:7, rating:4.6, status:'active' },
+  { name:'Bode I.', initials:'BI', col:'#FCEBEB', tcol:'#791F1F', email:'bode@biz.ng', phone:'+234 805 678 9012', trips:12, rating:3.9, status:'suspended' },
+];
+document.getElementById('users-tbody').innerHTML = usersData.map(u => `
+  <tr><td><div class="td-user"><div class="td-avatar" style="background:${u.col};color:${u.tcol};">${u.initials}</div>${u.name}</div></td>
+  <td>${u.email}</td><td>${u.phone}</td><td>${u.trips}</td>
+  <td>⭐ ${u.rating}</td>
+  <td><span class="badge ${u.status==='active'?'badge-green':'badge-red'}">${u.status}</span></td>
+  <td><button class="action-btn">View</button> <button class="action-btn danger">${u.status==='active'?'Suspend':'Restore'}</button></td></tr>
+`).join('');
+
+// Drivers data
+const driversData = [
+  { name:'Emeka O.', initials:'EO', col:'#E6F1FB', tcol:'#0C447C', vehicle:'Toyota Camry · KJA-234KJ', zone:'LOS', trips:142, rating:4.9, kyc:'verified', status:'active' },
+  { name:'Segun A.', initials:'SA', col:'#E1F5EE', tcol:'#085041', vehicle:'Honda Accord · ABJ-112GH', zone:'ABV', trips:88, rating:4.7, kyc:'verified', status:'active' },
+  { name:'Ngozi F.', initials:'NF', col:'#FBEAF0', tcol:'#72243E', vehicle:'Toyota Corolla · PHC-088KK', zone:'PHC', trips:56, rating:4.8, kyc:'pending', status:'pending' },
+  { name:'Chidi M.', initials:'CM', col:'#FAEEDA', tcol:'#633806', vehicle:'Hyundai Elantra · ENU-044LL', zone:'ENU', trips:31, rating:4.5, kyc:'pending', status:'pending' },
+];
+document.getElementById('drivers-tbody').innerHTML = driversData.map(d => `
+  <tr><td><div class="td-user"><div class="td-avatar" style="background:${d.col};color:${d.tcol};">${d.initials}</div>${d.name}</div></td>
+  <td>${d.vehicle}</td><td><span class="badge badge-blue">${d.zone}</span></td><td>${d.trips}</td>
+  <td>⭐ ${d.rating}</td>
+  <td><span class="badge ${d.kyc==='verified'?'badge-green':'badge-amber'}">${d.kyc}</span></td>
+  <td><span class="badge ${d.status==='active'?'badge-green':'badge-gray'}">${d.status}</span></td>
+  <td><button class="action-btn">View</button> <button class="action-btn ${d.kyc==='pending'?'primary':''}">${d.kyc==='pending'?'Verify':'Manage'}</button></td></tr>
+`).join('');
+</script>
+<script src="frontend-api.js"></script>
+</body>
+</html>
+
+

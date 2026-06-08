@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Airgo – Driver App</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0F3460; --navy-dark: #091f3c; --amber: #E8B84B; --amber-light: #fdf3d9;
+    --green: #1D9E75; --green-light: #E1F5EE; --red: #E24B4A; --red-light: #FCEBEB;
+    --text: #1a1a2e; --text-muted: #6b7280; --text-light: #9ca3af;
+    --bg: #f4f6fa; --surface: #ffffff; --border: rgba(0,0,0,0.08);
+  }
+  body {
+    font-family: 'Sora', sans-serif; background: #1a1a2e; min-height: 100vh;
+    display: flex; align-items: flex-start; justify-content: center; padding: 20px;
+  }
+  .phone-shell {
+    width: 375px; background: #0a0a1a; border-radius: 44px; padding: 10px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.5); position: relative;
+  }
+  .phone-notch {
+    width: 120px; height: 28px; background: #0a0a1a; border-radius: 0 0 18px 18px;
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 100;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .notch-cam { width: 10px; height: 10px; background: #1a1a2e; border-radius: 50%; }
+  .phone-screen { border-radius: 36px; overflow: hidden; background: var(--bg); min-height: 780px; }
+
+  /* STATUS BAR */
+  .status-bar { background: var(--navy-dark); padding: 36px 20px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .status-time { font-size: 14px; font-weight: 600; color: #fff; }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .status-icons i { font-size: 14px; color: rgba(255,255,255,0.7); }
+
+  /* SCREENS */
+  .screen { display: none; flex-direction: column; min-height: 720px; }
+  .screen.active { display: flex; }
+
+  /* ONLINE/OFFLINE HERO */
+  .driver-hero {
+    background: var(--navy-dark); padding: 16px 20px 32px; position: relative;
+  }
+  .driver-hero-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .driver-info { display: flex; align-items: center; gap: 12px; }
+  .driver-av {
+    width: 46px; height: 46px; border-radius: 50%; background: var(--amber);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 600; color: var(--navy-dark); border: 3px solid rgba(255,255,255,0.15);
+  }
+  .driver-name { font-size: 15px; font-weight: 600; color: #fff; }
+  .driver-meta { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+  .online-toggle {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.1); border-radius: 24px; padding: 8px 14px; cursor: pointer;
+  }
+  .toggle-track {
+    width: 42px; height: 24px; border-radius: 12px; background: rgba(255,255,255,0.15);
+    position: relative; transition: all 0.3s;
+  }
+  .toggle-track.on { background: var(--green); }
+  .toggle-thumb {
+    width: 18px; height: 18px; border-radius: 50%; background: #fff;
+    position: absolute; top: 3px; left: 3px; transition: all 0.3s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  }
+  .toggle-track.on .toggle-thumb { left: 21px; }
+  .toggle-label { font-size: 12px; font-weight: 600; color: #fff; min-width: 42px; }
+
+  .earnings-row { display: flex; gap: 10px; }
+  .earn-card {
+    flex: 1; background: rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .earn-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .earn-value { font-size: 20px; font-weight: 600; color: #fff; }
+  .earn-sub { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+  .earn-card.amber { border-color: rgba(232,184,75,0.3); }
+  .earn-card.amber .earn-value { color: var(--amber); }
+
+  /* MAP AREA */
+  .map-area {
+    flex: 1; background: #1a2744; position: relative; overflow: hidden; min-height: 240px;
+  }
+  .map-bg {
+    position: absolute; inset: 0;
+    background: #1a2744;
+    background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+  .map-road-h { position: absolute; left: 0; right: 0; height: 3px; background: rgba(255,255,255,0.08); }
+  .map-road-v { position: absolute; top: 0; bottom: 0; width: 3px; background: rgba(255,255,255,0.08); }
+  .map-road-main { background: rgba(255,255,255,0.15); height: 5px; }
+  .my-loc {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 20px; height: 20px; border-radius: 50%; background: var(--amber);
+    border: 3px solid #fff; box-shadow: 0 0 0 8px rgba(232,184,75,0.2), 0 0 20px rgba(232,184,75,0.3);
+  }
+  .pickup-pin {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--green); border: 2px solid #fff;
+    box-shadow: 0 0 0 4px rgba(29,158,117,0.25);
+  }
+  .drop-pin {
+    position: absolute; width: 14px; height: 14px; border-radius: 50%;
+    background: var(--red); border: 2px solid #fff;
+  }
+  .route-line-map {
+    position: absolute; border: 2px dashed rgba(232,184,75,0.5); border-radius: 2px;
+    pointer-events: none;
+  }
+  .map-chip {
+    position: absolute; background: rgba(10,10,26,0.85); backdrop-filter: blur(4px);
+    border-radius: 20px; padding: 6px 12px; font-size: 11px; color: #fff; font-weight: 500;
+    display: flex; align-items: center; gap: 5px; border: 1px solid rgba(255,255,255,0.1);
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    background: var(--navy-dark); display: flex; padding: 10px 0 20px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .nav-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    cursor: pointer; color: rgba(255,255,255,0.35); font-size: 9px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .nav-item.active { color: var(--amber); }
+  .nav-item i { font-size: 22px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border-radius: 18px; border: 1px solid var(--border); overflow: hidden; }
+  .card-pad { padding: 16px 18px; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+
+  /* REQUEST POPUP */
+  .request-sheet {
+    background: var(--surface); border-radius: 24px 24px 0 0;
+    padding: 16px 20px 28px; position: relative;
+    box-shadow: 0 -8px 30px rgba(0,0,0,0.12);
+  }
+  .sheet-handle {
+    width: 36px; height: 4px; background: var(--border); border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+  .request-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .req-av {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 600;
+  }
+  .req-name { font-size: 16px; font-weight: 600; color: var(--text); }
+  .req-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .req-fare {
+    margin-left: auto; text-align: right;
+  }
+  .req-fare-val { font-size: 22px; font-weight: 600; color: var(--navy); }
+  .req-fare-lbl { font-size: 10px; color: var(--text-muted); }
+
+  .route-viz { display: flex; align-items: stretch; gap: 10px; margin-bottom: 14px; padding: 12px; background: var(--bg); border-radius: 12px; }
+  .route-dots { display: flex; flex-direction: column; align-items: center; gap: 0; padding-top: 4px; }
+  .r-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .r-dot.green { background: var(--green); }
+  .r-dot.red { background: var(--red); }
+  .r-line { flex: 1; width: 2px; background: var(--border); margin: 3px 0; }
+  .route-stops { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+  .stop-addr { font-size: 12px; font-weight: 500; color: var(--text); }
+  .stop-label { font-size: 10px; color: var(--text-muted); }
+  .stop-block { margin-bottom: 6px; }
+  .stop-block:last-child { margin-bottom: 0; }
+  .route-meta { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+
+  .pax-chips { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .pax-chip {
+    display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+    background: var(--bg); border-radius: 10px; border: 1px solid var(--border);
+  }
+  .pax-chip-av { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; }
+  .pax-chip-name { font-size: 11px; color: var(--text); font-weight: 500; }
+  .pax-chip-pickup { font-size: 10px; color: var(--text-muted); }
+
+  .btn-row { display: flex; gap: 10px; }
+  .btn-decline {
+    flex: 1; padding: 14px; border-radius: 14px; border: 1px solid var(--border);
+    background: var(--bg); font-size: 14px; font-weight: 600; color: var(--text-muted);
+    cursor: pointer; font-family: 'Sora', sans-serif;
+  }
+  .btn-accept {
+    flex: 2; padding: 14px; border-radius: 14px; border: none;
+    background: var(--navy); font-size: 14px; font-weight: 600; color: #fff;
+    cursor: pointer; font-family: 'Sora', sans-serif;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .btn-accept.green-btn { background: var(--green); }
+  .countdown-ring {
+    position: absolute; right: 20px; top: 16px; width: 44px; height: 44px;
+  }
+
+  /* TRIP ACTIVE SCREEN */
+  .trip-status-bar {
+    background: var(--navy); padding: 14px 20px; display: flex; align-items: center; gap: 10px;
+  }
+  .trip-status-text { font-size: 14px; font-weight: 600; color: #fff; }
+  .trip-status-sub { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 1px; }
+  .trip-step-dot {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--amber);
+    box-shadow: 0 0 0 4px rgba(232,184,75,0.25);
+  }
+
+  /* EARNINGS SCREEN */
+  .earn-hero { background: var(--navy-dark); padding: 20px; }
+  .earn-big { font-size: 42px; font-weight: 600; color: #fff; }
+  .earn-period { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+  .earn-tabs { display: flex; background: rgba(255,255,255,0.06); border-radius: 10px; margin-top: 14px; }
+  .earn-tab { flex: 1; padding: 8px 0; text-align: center; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.4); cursor: pointer; border-radius: 10px; }
+  .earn-tab.active { background: var(--amber); color: var(--navy-dark); }
+
+  /* HISTORY SCREEN */
+  .hist-item {
+    display: flex; align-items: center; gap: 12px; padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hist-item:last-child { border-bottom: none; }
+  .hist-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .hist-info { flex: 1; }
+  .hist-route { font-size: 13px; font-weight: 500; color: var(--text); }
+  .hist-meta { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .hist-earn { font-size: 14px; font-weight: 600; color: var(--navy); }
+
+  .section-title { font-size: 13px; font-weight: 600; color: var(--text); padding: 14px 20px 8px; }
+
+  .scrollable { overflow-y: auto; flex: 1; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 10px; font-weight: 600; }
+  .badge-green { background: var(--green-light); color: #085041; }
+  .badge-amber { background: var(--amber-light); color: #633806; }
+
+  /* ONLINE STATUS CHIP */
+  .online-chip {
+    display: flex; align-items: center; gap: 6px; padding: 5px 12px;
+    border-radius: 20px; font-size: 11px; font-weight: 600;
+  }
+  .online-chip.on { background: rgba(29,158,117,0.2); color: #9FE1CB; }
+  .online-chip.off { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4); }
+  .online-chip-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .online-chip-dot.on { background: var(--green); animation: pulse 1.5s infinite; }
+  .online-chip-dot.off { background: rgba(255,255,255,0.2); }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(29,158,117,0.4);}50%{box-shadow:0 0 0 5px rgba(29,158,117,0);} }
+
+  .sos-btn {
+    position: absolute; right: 20px; bottom: 16px;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: var(--red); color: #fff; border: none;
+    font-size: 11px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(226,75,74,0.4);
+    font-family: 'Sora', sans-serif;
+  }
+</style>
+</head>
+<body>
+<div class="phone-shell">
+  <div class="phone-notch"><div class="notch-cam"></div></div>
+  <div class="phone-screen">
+
+    <!-- SCREEN: HOME (OFFLINE) -->
+    <div class="screen active" id="screen-home">
+      <div class="status-bar">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i>
+        </div>
+      </div>
+      <div class="driver-hero">
+        <div class="driver-hero-top">
+          <div class="driver-info">
+            <div class="driver-av">EO</div>
+            <div>
+              <div class="driver-name">Emeka Okafor</div>
+              <div class="driver-meta">Toyota Camry · KJA-234KJ</div>
+            </div>
+          </div>
+          <div class="online-chip off" id="status-chip" onclick="toggleOnline()">
+            <div class="online-chip-dot off" id="status-dot"></div>
+            <span id="status-text">Offline</span>
+          </div>
+        </div>
+        <div class="earnings-row">
+          <div class="earn-card">
+            <div class="earn-label">Today's earnings</div>
+            <div class="earn-value">₦0</div>
+            <div class="earn-sub">0 trips completed</div>
+          </div>
+          <div class="earn-card amber">
+            <div class="earn-label">This week</div>
+            <div class="earn-value">₦34,200</div>
+            <div class="earn-sub">8 trips</div>
+          </div>
+          <div class="earn-card">
+            <div class="earn-label">Rating</div>
+            <div class="earn-value">4.9 ⭐</div>
+            <div class="earn-sub">142 reviews</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-area" style="flex:1;">
+        <div class="map-bg"></div>
+        <div class="map-road-h" style="top:30%;"></div>
+        <div class="map-road-h" style="top:55%;"></div>
+        <div class="map-road-h" style="top:75%;"></div>
+        <div class="map-road-h map-road-main" style="top:45%;"></div>
+        <div class="map-road-v" style="left:25%;"></div>
+        <div class="map-road-v" style="left:60%;"></div>
+        <div class="map-road-v map-road-main" style="left:42%;"></div>
+        <div class="my-loc"></div>
+        <div class="map-chip" style="top:16px;left:16px;"><i class="ti ti-map-pin" style="font-size:12px;color:var(--amber);"></i> Victoria Island</div>
+        <div class="map-chip" style="bottom:16px;right:16px;"><i class="ti ti-clock" style="font-size:12px;color:rgba(255,255,255,0.5);"></i> LOS demand: HIGH</div>
+
+        <!-- GO ONLINE CTA -->
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,10,26,0.55);flex-direction:column;gap:12px;" id="offline-overlay">
+          <div style="font-size:14px;color:rgba(255,255,255,0.6);font-weight:500;">You're offline</div>
+          <button onclick="goOnline()" style="background:var(--amber);color:var(--navy-dark);border:none;border-radius:28px;padding:16px 40px;font-size:16px;font-weight:700;cursor:pointer;font-family:'Sora',sans-serif;box-shadow:0 8px 24px rgba(232,184,75,0.4);">
+            Go Online
+          </button>
+          <div style="font-size:11px;color:rgba(255,255,255,0.3);">Tap to start receiving requests</div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active" onclick="showScreen('screen-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="nav-item" onclick="showScreen('screen-request')"><i class="ti ti-bell"></i>Requests</div>
+        <div class="nav-item" onclick="showScreen('screen-earnings')"><i class="ti ti-coin"></i>Earnings</div>
+        <div class="nav-item" onclick="showScreen('screen-history')"><i class="ti ti-history"></i>History</div>
+        <div class="nav-item" onclick="showScreen('screen-profile')"><i class="ti ti-user"></i>Profile</div>
+      </div>
+    </div>
+
+    <!-- SCREEN: ONLINE + INCOMING REQUEST -->
+    <div class="screen" id="screen-request">
+      <div class="status-bar">
+        <span class="status-time">9:44</span>
+        <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="driver-hero" style="padding-bottom:18px;">
+        <div class="driver-hero-top" style="margin-bottom:12px;">
+          <div class="driver-info">
+            <div class="driver-av">EO</div>
+            <div>
+              <div class="driver-name">Emeka Okafor</div>
+              <div class="driver-meta">Toyota Camry · KJA-234KJ</div>
+            </div>
+          </div>
+          <div class="online-chip on">
+            <div class="online-chip-dot on"></div>
+            <span>Online</span>
+          </div>
+        </div>
+        <div class="earnings-row">
+          <div class="earn-card amber"><div class="earn-label">Today</div><div class="earn-value">₦12,600</div><div class="earn-sub">3 trips</div></div>
+          <div class="earn-card"><div class="earn-label">This week</div><div class="earn-value">₦46,800</div><div class="earn-sub">11 trips</div></div>
+          <div class="earn-card"><div class="earn-label">Acceptance</div><div class="earn-value">94%</div><div class="earn-sub">rate</div></div>
+        </div>
+      </div>
+
+      <div class="map-area" style="height:180px;flex:none;">
+        <div class="map-bg"></div>
+        <div class="map-road-h" style="top:40%;"></div>
+        <div class="map-road-h map-road-main" style="top:60%;"></div>
+        <div class="map-road-v" style="left:35%;"></div>
+        <div class="map-road-v map-road-main" style="left:55%;"></div>
+        <div class="my-loc" style="top:55%;left:50%;"></div>
+        <div class="pickup-pin" style="top:32%;left:28%;"></div>
+        <div class="drop-pin" style="top:70%;left:75%;"></div>
+        <div class="map-chip" style="top:10px;left:50%;transform:translateX(-50%);">
+          <i class="ti ti-bolt" style="font-size:11px;color:var(--amber);"></i> New ride request!
+        </div>
+        <button class="sos-btn">SOS</button>
+      </div>
+
+      <!-- REQUEST CARD -->
+      <div class="request-sheet" style="flex:1;">
+        <div class="sheet-handle"></div>
+        <div style="position:relative;">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+            <span style="color:var(--red);">⏱ 24 seconds to respond</span>
+          </div>
+        </div>
+        <div class="request-header">
+          <div class="req-av" style="background:#E1F5EE;color:#085041;">AT</div>
+          <div>
+            <div class="req-name">Amaka T.</div>
+            <div class="req-meta">⭐ 4.9 · 34 trips · Verified</div>
+          </div>
+          <div class="req-fare">
+            <div class="req-fare-val">₦4,200</div>
+            <div class="req-fare-lbl">your share</div>
+          </div>
+        </div>
+
+        <div class="route-viz">
+          <div class="route-dots">
+            <div class="r-dot green"></div>
+            <div class="r-line" style="height:28px;"></div>
+            <div class="r-dot" style="background:#E8B84B;border-radius:3px;"></div>
+            <div class="r-line" style="height:28px;"></div>
+            <div class="r-dot" style="background:#E8B84B;border-radius:3px;"></div>
+            <div class="r-line" style="height:28px;"></div>
+            <div class="r-dot red"></div>
+          </div>
+          <div class="route-stops">
+            <div class="stop-block">
+              <div class="stop-label">Your location</div>
+              <div class="stop-addr">Victoria Island</div>
+            </div>
+            <div class="stop-block">
+              <div class="stop-label">Pickup #1 (1.2km)</div>
+              <div class="stop-addr">Lekki Phase 1</div>
+            </div>
+            <div class="stop-block">
+              <div class="stop-label">Pickup #2 (2.1km)</div>
+              <div class="stop-addr">Oniru Estate</div>
+            </div>
+            <div class="stop-block">
+              <div class="stop-label">Drop-off</div>
+              <div class="stop-addr">MMIA Lagos (LOS)</div>
+            </div>
+          </div>
+          <div class="route-meta">
+            <div style="text-align:right;"><div style="font-size:13px;font-weight:600;color:var(--navy);">~42 min</div><div style="font-size:10px;color:var(--text-muted);">total</div></div>
+            <div style="text-align:right;"><div style="font-size:12px;font-weight:500;">18.4 km</div><div style="font-size:10px;color:var(--text-muted);">distance</div></div>
+          </div>
+        </div>
+
+        <div class="pax-chips">
+          <div class="pax-chip">
+            <div class="pax-chip-av" style="background:#E1F5EE;color:#085041;">AT</div>
+            <div><div class="pax-chip-name">Amaka T.</div><div class="pax-chip-pickup">Lekki Ph.1</div></div>
+          </div>
+          <div class="pax-chip">
+            <div class="pax-chip-av" style="background:#E6F1FB;color:#0C447C;">JB</div>
+            <div><div class="pax-chip-name">James B.</div><div class="pax-chip-pickup">Oniru</div></div>
+          </div>
+          <div class="pax-chip">
+            <div class="pax-chip-av" style="background:#FAEEDA;color:#633806;">KO</div>
+            <div><div class="pax-chip-name">Kemi O.</div><div class="pax-chip-pickup">Oniru</div></div>
+          </div>
+        </div>
+
+        <div style="background:#E1F5EE;border-radius:10px;padding:8px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px;">
+          <i class="ti ti-coin" style="font-size:16px;color:var(--green);"></i>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#085041;">Total payout: ₦16,800</div>
+            <div style="font-size:10px;color:#0F6E56;">3 passengers · Airgo fee ₦1,680 deducted</div>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-decline" onclick="showScreen('screen-home')">Decline</button>
+          <button class="btn-accept" onclick="showScreen('screen-active')">
+            <i class="ti ti-check"></i> Accept ride
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN: ACTIVE TRIP -->
+    <div class="screen" id="screen-active">
+      <div class="status-bar">
+        <span class="status-time">9:51</span>
+        <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="trip-status-bar">
+        <div class="trip-step-dot"></div>
+        <div>
+          <div class="trip-status-text">Head to pickup — Lekki Phase 1</div>
+          <div class="trip-status-sub">ETA 8 min · 4.2 km away</div>
+        </div>
+        <div style="margin-left:auto;"><i class="ti ti-navigation" style="font-size:22px;color:var(--amber);"></i></div>
+      </div>
+
+      <div class="map-area" style="height:260px;flex:none;position:relative;">
+        <div class="map-bg"></div>
+        <div class="map-road-h" style="top:35%;"></div>
+        <div class="map-road-h map-road-main" style="top:55%;"></div>
+        <div class="map-road-h" style="top:72%;"></div>
+        <div class="map-road-v" style="left:28%;"></div>
+        <div class="map-road-v map-road-main" style="left:50%;"></div>
+        <div class="map-road-v" style="left:72%;"></div>
+        <div class="my-loc" style="top:50%;left:44%;"></div>
+        <div class="pickup-pin" style="top:28%;left:68%;"></div>
+        <div class="drop-pin" style="top:78%;left:80%;"></div>
+        <div class="map-chip" style="top:12px;left:12px;"><i class="ti ti-navigation" style="font-size:11px;color:var(--amber);"></i> Turn right on Admiralty</div>
+        <button class="sos-btn">SOS</button>
+      </div>
+
+      <div class="scrollable" style="background:var(--surface);">
+        <!-- Steps -->
+        <div style="padding:14px 20px;border-bottom:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Trip stops</div>
+          <div class="route-viz" style="background:transparent;padding:0;">
+            <div class="route-dots">
+              <div class="r-dot" style="background:var(--amber);box-shadow:0 0 0 3px rgba(232,184,75,0.3);"></div>
+              <div class="r-line" style="height:30px;"></div>
+              <div class="r-dot green"></div>
+              <div class="r-line" style="height:30px;"></div>
+              <div class="r-dot green"></div>
+              <div class="r-line" style="height:30px;"></div>
+              <div class="r-dot red"></div>
+            </div>
+            <div class="route-stops">
+              <div class="stop-block" style="display:flex;align-items:center;justify-content:space-between;">
+                <div><div class="stop-label">You are here</div><div class="stop-addr">Victoria Island</div></div>
+                <span style="font-size:10px;font-weight:600;color:var(--amber);">NOW</span>
+              </div>
+              <div class="stop-block" style="display:flex;align-items:center;justify-content:space-between;">
+                <div><div class="stop-label">Pickup · Amaka T.</div><div class="stop-addr">Lekki Phase 1</div></div>
+                <span style="font-size:10px;color:var(--text-muted);">8 min</span>
+              </div>
+              <div class="stop-block" style="display:flex;align-items:center;justify-content:space-between;">
+                <div><div class="stop-label">Pickup · James & Kemi</div><div class="stop-addr">Oniru Estate</div></div>
+                <span style="font-size:10px;color:var(--text-muted);">14 min</span>
+              </div>
+              <div class="stop-block" style="display:flex;align-items:center;justify-content:space-between;">
+                <div><div class="stop-label">Drop-off</div><div class="stop-addr">MMIA Terminal 1</div></div>
+                <span style="font-size:10px;color:var(--text-muted);">42 min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Passengers -->
+        <div style="padding:12px 20px;border-bottom:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Passengers (3)</div>
+          <div class="pax-chips" style="flex-direction:column;gap:8px;">
+            <div class="pax-chip" style="background:var(--green-light);border-color:rgba(29,158,117,0.2);">
+              <div class="pax-chip-av" style="background:rgba(29,158,117,0.2);color:#085041;">AT</div>
+              <div style="flex:1;"><div class="pax-chip-name">Amaka T.</div><div class="pax-chip-pickup">Lekki Phase 1 · ⭐ 4.9</div></div>
+              <i class="ti ti-message-circle" style="font-size:18px;color:var(--green);cursor:pointer;"></i>
+            </div>
+            <div class="pax-chip">
+              <div class="pax-chip-av" style="background:#E6F1FB;color:#0C447C;">JB</div>
+              <div style="flex:1;"><div class="pax-chip-name">James B.</div><div class="pax-chip-pickup">Oniru Estate · ⭐ 4.8</div></div>
+              <i class="ti ti-message-circle" style="font-size:18px;color:var(--text-muted);cursor:pointer;"></i>
+            </div>
+            <div class="pax-chip">
+              <div class="pax-chip-av" style="background:#FAEEDA;color:#633806;">KO</div>
+              <div style="flex:1;"><div class="pax-chip-name">Kemi O.</div><div class="pax-chip-pickup">Oniru Estate · ⭐ 4.7</div></div>
+              <i class="ti ti-message-circle" style="font-size:18px;color:var(--text-muted);cursor:pointer;"></i>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:14px 20px;">
+          <div style="background:var(--amber-light);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <i class="ti ti-coin" style="font-size:20px;color:#E8B84B;"></i>
+            <div><div style="font-size:14px;font-weight:600;color:#633806;">Payout: ₦15,120</div><div style="font-size:11px;color:#8a6020;">After Airgo fee (10%)</div></div>
+          </div>
+          <button class="btn-accept green-btn" onclick="showScreen('screen-home')" style="width:100%;margin-top:0;">
+            <i class="ti ti-check"></i> Arrived at pickup — Start trip
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN: EARNINGS -->
+    <div class="screen" id="screen-earnings">
+      <div class="status-bar">
+        <span class="status-time">9:48</span>
+        <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="earn-hero">
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:6px;">TOTAL EARNINGS</div>
+        <div class="earn-big">₦46,800</div>
+        <div class="earn-period">This week · 11 trips completed</div>
+        <div class="earn-tabs">
+          <div class="earn-tab active">Day</div>
+          <div class="earn-tab">Week</div>
+          <div class="earn-tab">Month</div>
+        </div>
+      </div>
+
+      <div class="scrollable" style="background:var(--bg);">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;">
+          <div style="background:var(--surface);border-radius:14px;padding:14px;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Today</div>
+            <div style="font-size:22px;font-weight:600;color:var(--navy);">₦12,600</div>
+            <div style="font-size:11px;color:var(--green);margin-top:3px;">+3 trips</div>
+          </div>
+          <div style="background:var(--surface);border-radius:14px;padding:14px;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">Monthly</div>
+            <div style="font-size:22px;font-weight:600;color:var(--navy);">₦142,400</div>
+            <div style="font-size:11px;color:var(--green);margin-top:3px;">38 trips</div>
+          </div>
+        </div>
+
+        <!-- Bar chart stub -->
+        <div style="background:var(--surface);border-radius:14px;margin:0 14px 14px;padding:14px;border:1px solid var(--border);">
+          <div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px;">Daily earnings this week</div>
+          <div style="display:flex;align-items:flex-end;gap:8px;height:80px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;border-radius:4px 4px 0 0;background:var(--navy);height:48px;"></div>
+              <div style="font-size:9px;color:var(--text-muted);">Mon</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;border-radius:4px 4px 0 0;background:var(--navy);height:62px;"></div>
+              <div style="font-size:9px;color:var(--text-muted);">Tue</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;border-radius:4px 4px 0 0;background:var(--navy);height:40px;"></div>
+              <div style="font-size:9px;color:var(--text-muted);">Wed</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;border-radius:4px 4px 0 0;background:var(--navy);height:70px;"></div>
+              <div style="font-size:9px;color:var(--text-muted);">Thu</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;border-radius:4px 4px 0 0;background:var(--amber);height:56px;"></div>
+              <div style="font-size:9px;color:var(--text-muted);">Fri</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;border-radius:4px 4px 0 0;background:var(--navy);opacity:0.3;height:34px;"></div>
+              <div style="font-size:9px;color:var(--text-muted);">Sat</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;border-radius:4px 4px 0 0;background:var(--navy);opacity:0.15;height:20px;"></div>
+              <div style="font-size:9px;color:var(--text-muted);">Sun</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="nav-item" onclick="showScreen('screen-request')"><i class="ti ti-bell"></i>Requests</div>
+        <div class="nav-item active"><i class="ti ti-coin"></i>Earnings</div>
+        <div class="nav-item" onclick="showScreen('screen-history')"><i class="ti ti-history"></i>History</div>
+        <div class="nav-item" onclick="showScreen('screen-profile')"><i class="ti ti-user"></i>Profile</div>
+      </div>
+    </div>
+
+    <!-- SCREEN: HISTORY -->
+    <div class="screen" id="screen-history">
+      <div class="status-bar">
+        <span class="status-time">9:49</span>
+        <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div style="background:var(--navy-dark);padding:14px 20px 16px;">
+        <div style="font-size:16px;font-weight:600;color:#fff;">Trip history</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px;">38 trips this month</div>
+      </div>
+      <div class="scrollable" style="background:var(--bg);">
+        <div style="background:var(--surface);margin:0;padding:0 20px;">
+          <div class="hist-item">
+            <div class="hist-icon" style="background:var(--green-light);color:var(--green);"><i class="ti ti-plane-departure"></i></div>
+            <div class="hist-info">
+              <div class="hist-route">Lekki → MMIA (LOS)</div>
+              <div class="hist-meta">3 passengers · Today, 08:42 · 18.4km</div>
+            </div>
+            <div class="hist-earn">₦15,120</div>
+          </div>
+          <div class="hist-item">
+            <div class="hist-icon" style="background:var(--green-light);color:var(--green);"><i class="ti ti-plane-departure"></i></div>
+            <div class="hist-info">
+              <div class="hist-route">VI → MMIA (LOS)</div>
+              <div class="hist-meta">2 passengers · Today, 06:15 · 12.1km</div>
+            </div>
+            <div class="hist-earn">₦8,400</div>
+          </div>
+          <div class="hist-item">
+            <div class="hist-icon" style="background:#E6F1FB;color:var(--navy);"><i class="ti ti-plane-arrival"></i></div>
+            <div class="hist-info">
+              <div class="hist-route">MMIA → Lekki (return)</div>
+              <div class="hist-meta">1 passenger · Yesterday, 19:00</div>
+            </div>
+            <div class="hist-earn">₦5,600</div>
+          </div>
+          <div class="hist-item">
+            <div class="hist-icon" style="background:var(--green-light);color:var(--green);"><i class="ti ti-plane-departure"></i></div>
+            <div class="hist-info">
+              <div class="hist-route">Ajah → MMIA (LOS)</div>
+              <div class="hist-meta">4 passengers · Yesterday, 07:30</div>
+            </div>
+            <div class="hist-earn">₦17,280</div>
+          </div>
+          <div class="hist-item">
+            <div class="hist-icon" style="background:var(--red-light);color:var(--red);"><i class="ti ti-x"></i></div>
+            <div class="hist-info">
+              <div class="hist-route">Ikoyi → MMIA (LOS)</div>
+              <div class="hist-meta" style="color:var(--red);">Cancelled by passenger</div>
+            </div>
+            <div class="hist-earn" style="color:var(--text-muted);">₦0</div>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="nav-item" onclick="showScreen('screen-request')"><i class="ti ti-bell"></i>Requests</div>
+        <div class="nav-item" onclick="showScreen('screen-earnings')"><i class="ti ti-coin"></i>Earnings</div>
+        <div class="nav-item active"><i class="ti ti-history"></i>History</div>
+        <div class="nav-item" onclick="showScreen('screen-profile')"><i class="ti ti-user"></i>Profile</div>
+      </div>
+    </div>
+
+    <!-- SCREEN: PROFILE -->
+    <div class="screen" id="screen-profile">
+      <div class="status-bar">
+        <span class="status-time">9:50</span>
+        <div class="status-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div style="background:var(--navy-dark);padding:20px 20px 30px;text-align:center;">
+        <div class="driver-av" style="margin:0 auto 12px;width:64px;height:64px;font-size:22px;border:3px solid rgba(255,255,255,0.2);">EO</div>
+        <div style="font-size:18px;font-weight:600;color:#fff;">Emeka Okafor</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px;">Toyota Camry · KJA-234KJ · Lagos</div>
+        <div style="display:inline-flex;align-items:center;gap:5px;background:rgba(29,158,117,0.2);border-radius:12px;padding:4px 12px;margin-top:8px;font-size:11px;color:#9FE1CB;">
+          <i class="ti ti-shield-check" style="font-size:12px;"></i> KYC Verified
+        </div>
+      </div>
+      <div style="display:flex;margin:-16px 16px 0;gap:8px;">
+        <div style="flex:1;background:var(--surface);border-radius:14px;padding:12px;text-align:center;border:1px solid var(--border);">
+          <div style="font-size:20px;font-weight:600;color:var(--navy);">4.9</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Rating</div>
+        </div>
+        <div style="flex:1;background:var(--surface);border-radius:14px;padding:12px;text-align:center;border:1px solid var(--border);">
+          <div style="font-size:20px;font-weight:600;color:var(--navy);">142</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Trips</div>
+        </div>
+        <div style="flex:1;background:var(--surface);border-radius:14px;padding:12px;text-align:center;border:1px solid var(--border);">
+          <div style="font-size:20px;font-weight:600;color:var(--navy);">94%</div>
+          <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">Accept</div>
+        </div>
+      </div>
+      <div class="scrollable" style="padding:14px 20px;background:var(--bg);">
+        <div style="background:var(--surface);border-radius:14px;padding:0 16px;border:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;">
+            <div style="width:34px;height:34px;background:var(--blue-light);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:16px;"><i class="ti ti-id-badge"></i></div>
+            <span style="font-size:13px;flex:1;">Edit profile</span>
+            <i class="ti ti-chevron-right" style="font-size:14px;color:var(--text-muted);"></i>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;">
+            <div style="width:34px;height:34px;background:var(--amber-light);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--amber);font-size:16px;"><i class="ti ti-car"></i></div>
+            <span style="font-size:13px;flex:1;">Vehicle documents</span>
+            <i class="ti ti-chevron-right" style="font-size:14px;color:var(--text-muted);"></i>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--border);cursor:pointer;">
+            <div style="width:34px;height:34px;background:var(--green-light);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--green);font-size:16px;"><i class="ti ti-credit-card"></i></div>
+            <span style="font-size:13px;flex:1;">Bank account</span>
+            <i class="ti ti-chevron-right" style="font-size:14px;color:var(--text-muted);"></i>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:13px 0;cursor:pointer;">
+            <div style="width:34px;height:34px;background:var(--red-light);border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--red);font-size:16px;"><i class="ti ti-logout"></i></div>
+            <span style="font-size:13px;color:var(--red);">Sign out</span>
+          </div>
+        </div>
+      </div>
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="showScreen('screen-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="nav-item" onclick="showScreen('screen-request')"><i class="ti ti-bell"></i>Requests</div>
+        <div class="nav-item" onclick="showScreen('screen-earnings')"><i class="ti ti-coin"></i>Earnings</div>
+        <div class="nav-item" onclick="showScreen('screen-history')"><i class="ti ti-history"></i>History</div>
+        <div class="nav-item active"><i class="ti ti-user"></i>Profile</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let isOnline = false;
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function toggleOnline() {
+  isOnline = !isOnline;
+  const chip = document.getElementById('status-chip');
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  if (isOnline) {
+    chip.className = 'online-chip on';
+    dot.className = 'online-chip-dot on';
+    text.textContent = 'Online';
+  } else {
+    chip.className = 'online-chip off';
+    dot.className = 'online-chip-dot off';
+    text.textContent = 'Offline';
+  }
+}
+function goOnline() {
+  isOnline = true;
+  document.getElementById('offline-overlay').style.display = 'none';
+  toggleOnline();
+  setTimeout(() => showScreen('screen-request'), 400);
+}
+</script>
+<script src="frontend-api.js"></script>
+</body>
+</html>
+
+

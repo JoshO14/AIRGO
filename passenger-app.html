@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Airgo – Airport Ride Sharing</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --navy: #0F3460; --navy-dark: #091f3c; --navy-mid: #16427a;
+  --amber: #E8B84B; --amber-light: #fdf3d9; --amber-dark: #c99a30;
+  --green: #1D9E75; --green-light: #E1F5EE;
+  --red: #E24B4A; --red-light: #FCEBEB;
+  --blue-light: #E6F1FB;
+  --text: #111827; --text-2: #374151; --text-3: #6b7280; --text-4: #9ca3af;
+  --bg: #f7f8fc; --surface: #ffffff; --border: #e5e7eb; --border-2: #f0f1f4;
+  --radius: 16px; --radius-sm: 10px; --radius-xs: 7px;
+  --shadow: 0 2px 12px rgba(0,0,0,0.07); --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+}
+html, body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #1a1a2e; min-height: 100vh;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 16px 0; color: var(--text);
+}
+/* ── PHONE SHELL ── */
+.shell {
+  width: 390px; background: #0a0a18; border-radius: 48px; padding: 10px;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06);
+  position: relative; min-height: 844px;
+}
+.notch {
+  width: 126px; height: 34px; background: #0a0a18;
+  border-radius: 0 0 20px 20px;
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+}
+.notch-pill { width: 70px; height: 10px; background: #1a1a2e; border-radius: 5px; }
+.screen-wrap {
+  border-radius: 40px; overflow: hidden; background: var(--bg);
+  min-height: 824px; position: relative; display: flex; flex-direction: column;
+}
+/* ── STATUS BAR ── */
+.sbar {
+  padding: 48px 22px 10px; display: flex; justify-content: space-between; align-items: center;
+  flex-shrink: 0;
+}
+.sbar.dark { background: var(--navy-dark); }
+.sbar.light { background: var(--surface); border-bottom: 1px solid var(--border-2); }
+.sbar-time { font-size: 15px; font-weight: 700; }
+.sbar.dark .sbar-time { color: #fff; }
+.sbar.light .sbar-time { color: var(--text); }
+.sbar-icons { display: flex; gap: 5px; align-items: center; }
+.sbar.dark .sbar-icons i { color: rgba(255,255,255,0.7); font-size: 14px; }
+.sbar.light .sbar-icons i { color: var(--text-3); font-size: 14px; }
+/* ── SCREENS ── */
+.screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.2s ease; }
+.screen.active { display: flex; }
+@keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform:none; } }
+/* ── BOTTOM NAV ── */
+.bnav {
+  background: var(--surface); display: flex;
+  padding: 10px 0 26px; border-top: 1px solid var(--border-2);
+  flex-shrink: 0;
+}
+.bni {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; color: var(--text-4); font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px; padding: 4px 0;
+  transition: color 0.15s;
+}
+.bni.active { color: var(--navy); }
+.bni i { font-size: 22px; }
+/* ── SCROLL ── */
+.scroll { overflow-y: auto; flex: 1; }
+.scroll::-webkit-scrollbar { display: none; }
+/* ── PILL BUTTONS ── */
+.pill-tabs { display: flex; gap: 7px; padding: 0 18px 14px; }
+.ptab {
+  flex: 1; padding: 9px 4px; border-radius: 24px; font-size: 12px; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--surface); color: var(--text-3);
+  cursor: pointer; text-align: center; transition: all 0.15s;
+}
+.ptab.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+/* ── CARDS ── */
+.card {
+  background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border);
+  overflow: hidden; box-shadow: var(--shadow);
+}
+.card-mx { margin: 0 18px 14px; }
+.section-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 18px 10px;
+}
+.sh-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.sh-link { font-size: 12px; color: var(--navy); font-weight: 600; cursor: pointer; }
+/* ── HERO BAND ── */
+.hero {
+  background: var(--navy-dark); padding: 14px 18px 30px; position: relative; flex-shrink: 0;
+}
+.hero::after {
+  content: ''; position: absolute; bottom: -18px; left: 0; right: 0;
+  height: 36px; background: var(--bg); border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+.hero-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.brand-row { display: flex; align-items: center; gap: 9px; }
+.brand-icon {
+  width: 36px; height: 36px; border-radius: 11px; background: var(--amber);
+  display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--navy-dark);
+}
+.brand-name { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 1.5px; }
+.brand-sub { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.5px; }
+.av-sm {
+  width: 38px; height: 38px; border-radius: 50%; background: var(--amber);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: var(--navy-dark);
+  border: 2.5px solid rgba(255,255,255,0.2); cursor: pointer; flex-shrink: 0;
+}
+.hero-greet { font-size: 13px; color: rgba(255,255,255,0.55); margin-bottom: 3px; }
+.hero-title { font-size: 22px; font-weight: 700; color: #fff; line-height: 1.25; }
+.hero-sub { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; }
+/* ── SEARCH CARD ── */
+.search-card {
+  margin: 0 18px; background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow-lg); border: 1px solid var(--border-2);
+}
+.sf-row {
+  display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+  border-bottom: 1px solid var(--border-2); cursor: pointer;
+}
+.sf-row:last-child { border-bottom: none; }
+.sf-icon { font-size: 17px; color: var(--amber); width: 22px; text-align: center; flex-shrink: 0; }
+.sf-label { font-size: 10px; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.5px; }
+.sf-val { font-size: 13px; color: var(--text); font-weight: 600; margin-top: 1px; }
+.sf-ph { font-size: 13px; color: var(--text-4); margin-top: 1px; }
+/* ── RIDE CARD ── */
+.ride-card {
+  margin: 0 18px 12px; background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow); cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.ride-card:active { transform: scale(0.98); }
+.rc-top { display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 14px 0; }
+.rc-user { display: flex; align-items: center; gap: 10px; }
+.av {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.av-b { background: #E6F1FB; color: #0C447C; }
+.av-t { background: #E1F5EE; color: #085041; }
+.av-a { background: #FAEEDA; color: #633806; }
+.av-p { background: #FBEAF0; color: #72243E; }
+.rc-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.rc-meta { font-size: 11px; color: var(--text-3); margin-top: 2px; display: flex; align-items: center; gap: 4px; }
+.stars { color: var(--amber); letter-spacing: 1px; font-size: 11px; }
+.fare-tag {
+  background: var(--green-light); color: #085041; font-size: 14px; font-weight: 700;
+  padding: 5px 12px; border-radius: 24px;
+}
+.rc-route { display: flex; align-items: center; gap: 5px; padding: 10px 14px; }
+.rdot { width: 8px; height: 8px; border-radius: 50%; background: var(--navy); flex-shrink: 0; }
+.rline { flex: 1; height: 1.5px; background: var(--border); }
+.rplane { font-size: 15px; color: var(--amber); }
+.rc-stops { display: flex; justify-content: space-between; padding: 0 14px 10px; }
+.rc-stop-txt { font-size: 11px; color: var(--text-3); }
+.rc-tags { display: flex; gap: 6px; padding: 0 14px 14px; flex-wrap: wrap; }
+.tag {
+  font-size: 10px; padding: 4px 9px; border-radius: 16px; font-weight: 600;
+  border: 1px solid var(--border); color: var(--text-3); display: flex; align-items: center; gap: 3px;
+}
+.tag.match { background: var(--navy); color: #fff; border-color: var(--navy); }
+/* ── BADGES ── */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-g { background: var(--green-light); color: #085041; }
+.badge-a { background: var(--amber-light); color: #633806; }
+.badge-r { background: var(--red-light); color: #791F1F; }
+.badge-b { background: var(--blue-light); color: #0C447C; }
+.badge-n { background: var(--bg); color: var(--text-3); border: 1px solid var(--border); }
+/* ── BUTTONS ── */
+.btn-primary {
+  background: var(--navy); color: #fff; border: none; border-radius: var(--radius);
+  padding: 15px 20px; font-size: 14px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+  font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.15s;
+}
+.btn-primary:active { background: var(--navy-mid); }
+.btn-secondary {
+  background: var(--bg); color: var(--text); border: 1.5px solid var(--border);
+  border-radius: var(--radius); padding: 15px 20px; font-size: 14px; font-weight: 600;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif; flex: 1;
+}
+.btn-amber {
+  background: var(--amber); color: var(--navy-dark); border: none; border-radius: var(--radius);
+  padding: 15px 20px; font-size: 14px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+/* ── NAV HEADER ── */
+.nav-hdr {
+  display: flex; align-items: center; gap: 10px; padding: 10px 18px 12px;
+  background: var(--surface); border-bottom: 1px solid var(--border-2); flex-shrink: 0;
+}
+.nav-back {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--bg);
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: var(--text-2); font-size: 16px; flex-shrink: 0;
+}
+.nav-title { font-size: 16px; font-weight: 700; color: var(--text); }
+/* ── INPUT ── */
+.inp {
+  width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text);
+  background: var(--surface); outline: none; transition: border-color 0.15s;
+}
+.inp:focus { border-color: var(--navy); }
+select.inp { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+.form-label { font-size: 11px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.form-group { margin-bottom: 14px; }
+/* ── DIVIDER ── */
+.divider { height: 1px; background: var(--border-2); margin: 0 18px; }
+/* ── COST BREAKDOWN ── */
+.cost-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border-2); }
+.cost-row:last-child { border-bottom: none; }
+.cost-label { font-size: 13px; color: var(--text-3); }
+.cost-val { font-size: 13px; font-weight: 600; color: var(--text); }
+.cost-save { color: var(--green); }
+.cost-total { font-weight: 700; color: var(--navy); font-size: 15px; }
+/* ── CHAT ── */
+.msg { display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-end; }
+.msg.me { flex-direction: row-reverse; }
+.msg-av { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.bubble {
+  max-width: 72%; padding: 10px 13px; border-radius: 18px; font-size: 13px; line-height: 1.5;
+}
+.bubble.them { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 5px; }
+.bubble.me { background: var(--navy); color: #fff; border-bottom-right-radius: 5px; }
+.msg-time { font-size: 10px; color: var(--text-4); margin-top: 3px; }
+.chat-input-row {
+  display: flex; gap: 8px; align-items: center; padding: 10px 18px 26px;
+  background: var(--surface); border-top: 1px solid var(--border-2); flex-shrink: 0;
+}
+.chat-inp {
+  flex: 1; padding: 11px 14px; border-radius: 24px; border: 1.5px solid var(--border);
+  font-size: 13px; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text); outline: none;
+  background: var(--bg);
+}
+.send-btn {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--navy); border: none;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+}
+/* ── PROFILE SCREEN ── */
+.profile-hero { background: var(--navy-dark); padding: 14px 18px 32px; text-align: center; }
+.profile-av {
+  width: 72px; height: 72px; border-radius: 50%; background: var(--amber);
+  display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700;
+  color: var(--navy-dark); margin: 0 auto 12px; border: 3px solid rgba(255,255,255,0.2);
+}
+.profile-name { font-size: 20px; font-weight: 700; color: #fff; }
+.profile-tag { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 4px; }
+.verify-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(29,158,117,0.2); border-radius: 16px;
+  padding: 4px 12px; font-size: 11px; color: #9FE1CB; margin-top: 10px; font-weight: 600;
+}
+.stat-strip { display: flex; margin: -16px 18px 0; gap: 8px; }
+.stat-box {
+  flex: 1; background: var(--surface); border-radius: var(--radius); padding: 12px 10px;
+  text-align: center; border: 1px solid var(--border); box-shadow: var(--shadow);
+}
+.stat-num { font-size: 22px; font-weight: 700; color: var(--navy); }
+.stat-lbl { font-size: 10px; color: var(--text-4); text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+.menu-list { padding: 0 18px; margin-top: 18px; }
+.menu-item {
+  display: flex; align-items: center; gap: 12px; padding: 13px 0;
+  border-bottom: 1px solid var(--border-2); cursor: pointer;
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-ic {
+  width: 36px; height: 36px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0;
+}
+.menu-label { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.menu-chev { font-size: 15px; color: var(--text-4); }
+/* ── ONBOARDING / AUTH ── */
+.onboard-hero {
+  background: var(--navy-dark); flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; padding: 40px 28px; text-align: center;
+  position: relative; overflow: hidden;
+}
+.ob-circles::before, .ob-circles::after {
+  content: ''; position: absolute; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.ob-circles::before { width: 280px; height: 280px; top: -80px; right: -80px; }
+.ob-circles::after { width: 200px; height: 200px; bottom: -60px; left: -60px; }
+.ob-plane { font-size: 64px; color: var(--amber); margin-bottom: 24px; opacity: 0.9; }
+.ob-title { font-size: 32px; font-weight: 800; color: #fff; line-height: 1.15; margin-bottom: 12px; }
+.ob-sub { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; max-width: 280px; }
+.ob-bottom { padding: 24px 24px 32px; background: var(--surface); flex-shrink: 0; }
+/* ── STEPPER ── */
+.stepper { display: flex; align-items: center; gap: 0; margin-bottom: 20px; }
+.step-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+  flex-shrink: 0; transition: all 0.2s;
+}
+.step-dot.done { background: var(--navy); color: #fff; }
+.step-dot.active { background: var(--amber); color: var(--navy-dark); box-shadow: 0 0 0 4px rgba(232,184,75,0.25); }
+.step-dot.todo { background: var(--border); color: var(--text-4); }
+.step-line { flex: 1; height: 2px; background: var(--border); }
+.step-line.done { background: var(--navy); }
+/* ── MAP PLACEHOLDER ── */
+.map-ph {
+  background: #1a2744; position: relative; overflow: hidden; flex-shrink: 0;
+}
+.map-grid-bg {
+  position: absolute; inset: 0;
+  background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+.map-road { position: absolute; background: rgba(255,255,255,0.09); }
+.mh { height: 4px; left: 0; right: 0; }
+.mv { width: 4px; top: 0; bottom: 0; }
+.map-road.main { background: rgba(255,255,255,0.16); }
+.mh.main { height: 6px; }
+.mv.main { width: 6px; }
+.loc-pin { position: absolute; border-radius: 50%; border: 3px solid #fff; }
+.loc-me { background: var(--amber); box-shadow: 0 0 0 8px rgba(232,184,75,0.2), 0 0 20px rgba(232,184,75,0.3); }
+.loc-pickup { background: var(--green); box-shadow: 0 0 0 4px rgba(29,158,117,0.25); }
+.loc-drop { background: var(--red); }
+.map-label {
+  position: absolute; background: rgba(9,31,60,0.85); backdrop-filter: blur(4px);
+  border-radius: 20px; padding: 5px 11px; font-size: 11px; color: #fff; font-weight: 500;
+  display: flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,0.08);
+}
+/* ── TRIP PROGRESS INDICATOR ── */
+.trip-progress {
+  background: var(--navy); padding: 14px 18px; flex-shrink: 0;
+}
+.tp-label { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.tp-value { font-size: 16px; font-weight: 700; color: #fff; margin-top: 3px; }
+.tp-sub { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 1px; }
+/* ── SAFETY SOS ── */
+.sos {
+  position: absolute; bottom: 14px; right: 14px;
+  width: 46px; height: 46px; border-radius: 50%;
+  background: var(--red); border: none; color: #fff;
+  font-size: 11px; font-weight: 800; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(226,75,74,0.45); font-family: 'Plus Jakarta Sans', sans-serif;
+}
+/* ── RATING STARS ── */
+.rating-stars { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+.rstar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; cursor: pointer; transition: transform 0.12s;
+  background: var(--bg); border: 1.5px solid var(--border);
+}
+.rstar:hover, .rstar.sel { background: var(--amber-light); border-color: var(--amber); transform: scale(1.1); }
+/* ── NOTIFICATIONS ── */
+.notif-item {
+  display: flex; align-items: flex-start; gap: 12px; padding: 14px 18px;
+  border-bottom: 1px solid var(--border-2); cursor: pointer;
+}
+.notif-ic {
+  width: 40px; height: 40px; border-radius: var(--radius-sm); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.notif-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.notif-sub { font-size: 12px; color: var(--text-3); margin-top: 2px; line-height: 1.4; }
+.notif-time { font-size: 10px; color: var(--text-4); margin-top: 4px; }
+.notif-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--navy); margin-top: 5px; flex-shrink: 0; }
+/* ── LOYALTY CARD ── */
+.loyalty-card {
+  background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-mid) 100%);
+  border-radius: var(--radius); padding: 18px; margin: 0 18px 14px;
+  border: 1px solid rgba(255,255,255,0.08); position: relative; overflow: hidden;
+}
+.lc-bg { position: absolute; right: -20px; top: -20px; font-size: 120px; opacity: 0.06; color: var(--amber); }
+.lc-label { font-size: 10px; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.lc-points { font-size: 32px; font-weight: 700; color: var(--amber); }
+.lc-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 3px; }
+.lc-bar-track { background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; margin-top: 14px; }
+.lc-bar-fill { background: var(--amber); border-radius: 4px; height: 6px; width: 62%; }
+/* ── PAYMENT METHODS ── */
+.pm-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 0;
+  border-bottom: 1px solid var(--border-2);
+}
+.pm-item:last-child { border-bottom: none; }
+.pm-ic {
+  width: 44px; height: 30px; border-radius: 7px; background: var(--bg);
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: var(--navy); flex-shrink: 0;
+}
+.pm-label { flex: 1; font-size: 13px; font-weight: 500; color: var(--text); }
+.pm-default { font-size: 10px; color: var(--green); font-weight: 600; }
+/* ─────────────────────────────────
+   SCREEN LAYOUTS
+   ───────────────────────────────── */
+
+/* ===== SPLASH ===== */
+#s-splash {
+  background: var(--navy-dark); align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.splash-rings::before, .splash-rings::after {
+  content: ''; position: absolute; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.splash-rings::before { width: 400px; height: 400px; top: -100px; right: -100px; }
+.splash-rings::after { width: 280px; height: 280px; bottom: -80px; left: -80px; }
+.splash-center { display: flex; flex-direction: column; align-items: center; gap: 16px; z-index: 1; }
+.splash-logo {
+  width: 80px; height: 80px; background: var(--amber); border-radius: 24px;
+  display: flex; align-items: center; justify-content: center; font-size: 38px; color: var(--navy-dark);
+  box-shadow: 0 16px 40px rgba(232,184,75,0.4);
+}
+.splash-name { font-size: 36px; font-weight: 800; color: #fff; letter-spacing: 3px; }
+.splash-sub { font-size: 13px; color: rgba(255,255,255,0.4); letter-spacing: 0.5px; }
+.splash-loader { display: flex; gap: 6px; margin-top: 10px; }
+.sl-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.25); animation: bounce 1.2s infinite; }
+.sl-dot:nth-child(2) { animation-delay: 0.2s; }
+.sl-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce { 0%,60%,100%{transform:translateY(0);background:rgba(255,255,255,0.25);} 30%{transform:translateY(-8px);background:var(--amber);} }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="notch"><div class="notch-pill"></div></div>
+  <div class="screen-wrap">
+
+    <!-- ══════════════════════════════
+         SPLASH SCREEN
+    ══════════════════════════════ -->
+    <div class="screen active" id="s-splash">
+      <div class="splash-rings"></div>
+      <div class="splash-center">
+        <div class="splash-logo"><i class="ti ti-plane"></i></div>
+        <div class="splash-name">AIRGO</div>
+        <div class="splash-sub">Airport Ride Sharing</div>
+        <div class="splash-loader">
+          <div class="sl-dot"></div><div class="sl-dot"></div><div class="sl-dot"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         ONBOARDING
+    ══════════════════════════════ -->
+    <div class="screen" id="s-onboard">
+      <div class="onboard-hero ob-circles">
+        <i class="ti ti-plane ob-plane"></i>
+        <div class="ob-title">Split the ride,<br>share the cost</div>
+        <div class="ob-sub">Connect with travelers heading to the same airport. Save up to 70% on every journey.</div>
+      </div>
+      <div class="ob-bottom">
+        <div style="display:flex;gap:5px;justify-content:center;margin-bottom:20px;">
+          <div style="width:28px;height:4px;border-radius:2px;background:var(--navy);"></div>
+          <div style="width:14px;height:4px;border-radius:2px;background:var(--border);"></div>
+          <div style="width:14px;height:4px;border-radius:2px;background:var(--border);"></div>
+        </div>
+        <button class="btn-primary" onclick="show('s-register')" style="margin-bottom:10px;">
+          <i class="ti ti-user-plus"></i> Create account
+        </button>
+        <button class="btn-secondary" onclick="show('s-login')">
+          <i class="ti ti-login"></i> Sign in
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         REGISTER
+    ══════════════════════════════ -->
+    <div class="screen" id="s-register">
+      <div class="sbar light">
+        <span class="sbar-time">9:41</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="nav-hdr">
+        <div class="nav-back" onclick="show('s-onboard')"><i class="ti ti-arrow-left"></i></div>
+        <div class="nav-title">Create account</div>
+      </div>
+      <div class="scroll" style="padding:20px 18px;">
+        <div class="stepper">
+          <div class="step-dot active">1</div>
+          <div class="step-line"></div>
+          <div class="step-dot todo">2</div>
+          <div class="step-line"></div>
+          <div class="step-dot todo">3</div>
+        </div>
+        <div style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">Personal details</div>
+        <div style="font-size:13px;color:var(--text-3);margin-bottom:20px;">Let's set up your Airgo profile</div>
+        <div class="form-group"><div class="form-label">Full name</div><input class="inp" type="text" placeholder="David Adeyemi" value=""></div>
+        <div class="form-group"><div class="form-label">Email address</div><input class="inp" type="email" placeholder="you@email.com"></div>
+        <div class="form-group"><div class="form-label">Phone number</div>
+          <div style="display:flex;gap:8px;">
+            <select class="inp" style="width:90px;flex-shrink:0;">
+              <option>🇳🇬 +234</option><option>🇬🇧 +44</option><option>🇺🇸 +1</option>
+            </select>
+            <input class="inp" type="tel" placeholder="801 234 5678">
+          </div>
+        </div>
+        <div class="form-group"><div class="form-label">Home city</div>
+          <select class="inp">
+            <option>Lagos</option><option>Abuja</option><option>Port Harcourt</option><option>Uyo</option><option>Enugu</option>
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Password</div><input class="inp" type="password" placeholder="Min. 8 characters"></div>
+        <div style="background:var(--bg);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:20px;font-size:12px;color:var(--text-3);line-height:1.5;">
+          By creating an account you agree to Airgo's <span style="color:var(--navy);font-weight:600;cursor:pointer;">Terms of Service</span> and <span style="color:var(--navy);font-weight:600;cursor:pointer;">Privacy Policy</span>.
+        </div>
+        <button class="btn-primary" onclick="show('s-verify-phone')">Continue <i class="ti ti-arrow-right"></i></button>
+        <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-3);">Already have an account? <span style="color:var(--navy);font-weight:600;cursor:pointer;" onclick="show('s-login')">Sign in</span></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PHONE VERIFY
+    ══════════════════════════════ -->
+    <div class="screen" id="s-verify-phone">
+      <div class="sbar light">
+        <span class="sbar-time">9:43</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="nav-hdr">
+        <div class="nav-back" onclick="show('s-register')"><i class="ti ti-arrow-left"></i></div>
+        <div class="nav-title">Verify phone</div>
+      </div>
+      <div class="scroll" style="padding:20px 18px;">
+        <div class="stepper">
+          <div class="step-dot done"><i class="ti ti-check" style="font-size:12px;"></i></div>
+          <div class="step-line done"></div>
+          <div class="step-dot active">2</div>
+          <div class="step-line"></div>
+          <div class="step-dot todo">3</div>
+        </div>
+        <div style="text-align:center;padding:24px 0 20px;">
+          <div style="width:72px;height:72px;background:var(--blue-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:30px;color:var(--navy);">
+            <i class="ti ti-device-mobile"></i>
+          </div>
+          <div style="font-size:20px;font-weight:700;color:var(--text);">Check your SMS</div>
+          <div style="font-size:13px;color:var(--text-3);margin-top:6px;line-height:1.6;">We sent a 6-digit code to<br><strong style="color:var(--text);">+234 801 234 5678</strong></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px;">
+          <input class="inp" type="text" maxlength="1" style="width:48px;text-align:center;font-size:22px;font-weight:700;padding:14px 0;" value="4">
+          <input class="inp" type="text" maxlength="1" style="width:48px;text-align:center;font-size:22px;font-weight:700;padding:14px 0;" value="7">
+          <input class="inp" type="text" maxlength="1" style="width:48px;text-align:center;font-size:22px;font-weight:700;padding:14px 0;" value="3">
+          <input class="inp" type="text" maxlength="1" style="width:48px;text-align:center;font-size:22px;font-weight:700;padding:14px 0;" value="">
+          <input class="inp" type="text" maxlength="1" style="width:48px;text-align:center;font-size:22px;font-weight:700;padding:14px 0;" value="">
+          <input class="inp" type="text" maxlength="1" style="width:48px;text-align:center;font-size:22px;font-weight:700;padding:14px 0;" value="">
+        </div>
+        <button class="btn-primary" onclick="show('s-home')" style="margin-bottom:12px;">Verify &amp; continue <i class="ti ti-arrow-right"></i></button>
+        <div style="text-align:center;font-size:13px;color:var(--text-3);">Didn't receive it? <span style="color:var(--navy);font-weight:600;cursor:pointer;">Resend in 0:42</span></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         LOGIN
+    ══════════════════════════════ -->
+    <div class="screen" id="s-login">
+      <div class="sbar light">
+        <span class="sbar-time">9:41</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="nav-hdr">
+        <div class="nav-back" onclick="show('s-onboard')"><i class="ti ti-arrow-left"></i></div>
+        <div class="nav-title">Sign in</div>
+      </div>
+      <div class="scroll" style="padding:20px 18px;">
+        <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;">Welcome back</div>
+        <div style="font-size:13px;color:var(--text-3);margin-bottom:24px;">Sign in to your Airgo account</div>
+        <div class="form-group"><div class="form-label">Phone or email</div><input class="inp" type="text" placeholder="+234 801..."></div>
+        <div class="form-group"><div class="form-label">Password</div><input class="inp" type="password" placeholder="Your password"></div>
+        <div style="text-align:right;margin-bottom:20px;font-size:13px;color:var(--navy);font-weight:600;cursor:pointer;">Forgot password?</div>
+        <button class="btn-primary" onclick="show('s-home')" style="margin-bottom:12px;"><i class="ti ti-login"></i> Sign in</button>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+          <span style="font-size:12px;color:var(--text-4);">or continue with</span>
+          <div style="flex:1;height:1px;background:var(--border);"></div>
+        </div>
+        <button class="btn-secondary" style="margin-bottom:10px;border-radius:var(--radius);">
+          <img src="https://www.google.com/favicon.ico" style="width:16px;height:16px;" alt=""> Continue with Google
+        </button>
+        <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-3);">New to Airgo? <span style="color:var(--navy);font-weight:600;cursor:pointer;" onclick="show('s-register')">Create account</span></div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         HOME
+    ══════════════════════════════ -->
+    <div class="screen" id="s-home">
+      <div class="sbar dark">
+        <span class="sbar-time" style="color:#fff;">9:44</span>
+        <div class="sbar-icons"><i class="ti ti-wifi" style="color:rgba(255,255,255,0.7);"></i><i class="ti ti-battery-2" style="color:rgba(255,255,255,0.7);"></i></div>
+      </div>
+      <div class="hero">
+        <div class="hero-top">
+          <div class="brand-row">
+            <div class="brand-icon"><i class="ti ti-plane"></i></div>
+            <div>
+              <div class="brand-name">AIRGO</div>
+              <div class="brand-sub">Airport ride sharing</div>
+            </div>
+          </div>
+          <div class="av-sm" onclick="show('s-profile')">DA</div>
+        </div>
+        <div class="hero-greet">Good morning, David 👋</div>
+        <div class="hero-title">Where are you<br>flying today?</div>
+        <div class="hero-sub">Find co-travelers heading your way</div>
+      </div>
+
+      <div class="scroll" style="padding-top:28px;">
+        <div class="pill-tabs">
+          <div class="ptab active" onclick="setTab(this,'find')">Find a ride</div>
+          <div class="ptab" onclick="show('s-create')">Offer seats</div>
+          <div class="ptab" onclick="show('s-mytrips')">My trips</div>
+        </div>
+
+        <div class="search-card card-mx" id="find-tab">
+          <div class="sf-row" onclick="show('s-search')">
+            <i class="ti ti-map-pin sf-icon"></i>
+            <div><div class="sf-label">From</div><div class="sf-val">Victoria Island, Lagos</div></div>
+          </div>
+          <div class="sf-row">
+            <i class="ti ti-plane-departure sf-icon"></i>
+            <div><div class="sf-label">Airport</div><div class="sf-val">Murtala Muhammed Intl (LOS)</div></div>
+          </div>
+          <div class="sf-row">
+            <i class="ti ti-calendar sf-icon"></i>
+            <div style="flex:1;"><div class="sf-label">Date</div><div class="sf-val">Today, 12 June</div></div>
+            <i class="ti ti-clock sf-icon"></i>
+            <div><div class="sf-label">Time</div><div class="sf-val">08:00 AM</div></div>
+          </div>
+        </div>
+
+        <div class="card-mx" style="margin-bottom:14px;">
+          <button class="btn-primary" onclick="show('s-results')"><i class="ti ti-search"></i> Find matching rides</button>
+        </div>
+
+        <!-- LOYALTY -->
+        <div class="loyalty-card">
+          <div class="lc-bg"><i class="ti ti-plane"></i></div>
+          <div class="lc-label">Airgo points</div>
+          <div class="lc-points">1,240</div>
+          <div class="lc-sub">620 more for Premium — you're 62% there</div>
+          <div class="lc-bar-track"><div class="lc-bar-fill"></div></div>
+        </div>
+
+        <div class="section-head">
+          <span class="sh-title">Nearby matches</span>
+          <span class="sh-link" onclick="show('s-results')">See all</span>
+        </div>
+
+        <div class="ride-card" onclick="show('s-detail')">
+          <div class="rc-top">
+            <div class="rc-user">
+              <div class="av av-b">AT</div>
+              <div>
+                <div class="rc-name">Amaka Tunde</div>
+                <div class="rc-meta"><span class="stars">★★★★★</span> 4.9 · 34 rides · Verified</div>
+              </div>
+            </div>
+            <div class="fare-tag">₦4,200</div>
+          </div>
+          <div class="rc-route">
+            <div class="rdot"></div><div class="rline"></div>
+            <i class="ti ti-plane rplane"></i>
+            <div class="rline"></div>
+            <div class="rdot" style="background:var(--amber);"></div>
+          </div>
+          <div class="rc-stops">
+            <span class="rc-stop-txt">Lekki Phase 1</span>
+            <span class="rc-stop-txt">LOS · 07:45 AM</span>
+          </div>
+          <div class="rc-tags">
+            <span class="tag match"><i class="ti ti-bolt" style="font-size:10px;"></i>98% match</span>
+            <span class="tag"><i class="ti ti-users" style="font-size:10px;"></i>2 seats left</span>
+            <span class="tag"><i class="ti ti-briefcase" style="font-size:10px;"></i>Bags OK</span>
+          </div>
+        </div>
+
+        <div class="ride-card" onclick="show('s-detail')">
+          <div class="rc-top">
+            <div class="rc-user">
+              <div class="av av-t">KO</div>
+              <div>
+                <div class="rc-name">Kemi Okonkwo</div>
+                <div class="rc-meta"><span class="stars">★★★★☆</span> 4.7 · 18 rides · Verified</div>
+              </div>
+            </div>
+            <div class="fare-tag">₦3,800</div>
+          </div>
+          <div class="rc-route">
+            <div class="rdot"></div><div class="rline"></div>
+            <i class="ti ti-plane rplane"></i>
+            <div class="rline"></div>
+            <div class="rdot" style="background:var(--amber);"></div>
+          </div>
+          <div class="rc-stops">
+            <span class="rc-stop-txt">Ajah, Lagos</span>
+            <span class="rc-stop-txt">LOS · 08:10 AM</span>
+          </div>
+          <div class="rc-tags">
+            <span class="tag match"><i class="ti ti-bolt" style="font-size:10px;"></i>91% match</span>
+            <span class="tag"><i class="ti ti-users" style="font-size:10px;"></i>3 seats left</span>
+          </div>
+        </div>
+        <div style="height:10px;"></div>
+      </div>
+
+      <div class="bnav">
+        <div class="bni active" onclick="show('s-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="bni" onclick="show('s-results')"><i class="ti ti-search"></i>Explore</div>
+        <div class="bni" onclick="show('s-create')"><i class="ti ti-plus"></i>New trip</div>
+        <div class="bni" onclick="show('s-notifications')"><i class="ti ti-bell"></i>Alerts</div>
+        <div class="bni" onclick="show('s-profile')"><i class="ti ti-user"></i>Profile</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         SEARCH / RESULTS
+    ══════════════════════════════ -->
+    <div class="screen" id="s-results">
+      <div class="sbar light">
+        <span class="sbar-time">9:45</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="nav-hdr">
+        <div class="nav-back" onclick="show('s-home')"><i class="ti ti-arrow-left"></i></div>
+        <div class="nav-title">Rides to LOS · 12 Jun</div>
+        <button style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--text-3);display:flex;align-items:center;gap:4px;font-family:'Plus Jakarta Sans',sans-serif;">
+          <i class="ti ti-adjustments-horizontal" style="font-size:14px;"></i> Filter
+        </button>
+      </div>
+      <div style="padding:10px 18px;display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0;">
+        <span class="tag match" style="padding:5px 12px;"><i class="ti ti-bolt" style="font-size:11px;"></i>Smart match</span>
+        <span class="tag" style="padding:5px 12px;">AM departures</span>
+        <span class="tag" style="padding:5px 12px;">1–3 bags</span>
+      </div>
+      <div class="scroll">
+        <div style="padding:2px 18px 10px;font-size:12px;color:var(--text-3);font-weight:500;">3 rides found near Victoria Island</div>
+
+        <div class="ride-card" onclick="show('s-detail')">
+          <div class="rc-top">
+            <div class="rc-user">
+              <div class="av av-b">AT</div>
+              <div>
+                <div class="rc-name">Amaka Tunde</div>
+                <div class="rc-meta"><span class="stars">★★★★★</span> 4.9 · Verified</div>
+              </div>
+            </div>
+            <div class="fare-tag">₦4,200</div>
+          </div>
+          <div class="rc-route">
+            <div class="rdot"></div><div class="rline"></div>
+            <i class="ti ti-plane rplane"></i>
+            <div class="rline"></div>
+            <div class="rdot" style="background:var(--amber);"></div>
+          </div>
+          <div class="rc-stops"><span class="rc-stop-txt">Lekki Phase 1</span><span class="rc-stop-txt">LOS · 07:45</span></div>
+          <div class="rc-tags">
+            <span class="tag match"><i class="ti ti-bolt" style="font-size:10px;"></i>98% match</span>
+            <span class="tag"><i class="ti ti-users" style="font-size:10px;"></i>2 seats</span>
+            <span class="tag"><i class="ti ti-briefcase" style="font-size:10px;"></i>Bags OK</span>
+          </div>
+        </div>
+
+        <div class="ride-card" onclick="show('s-detail')">
+          <div class="rc-top">
+            <div class="rc-user">
+              <div class="av av-t">KO</div>
+              <div>
+                <div class="rc-name">Kemi Okonkwo</div>
+                <div class="rc-meta"><span class="stars">★★★★☆</span> 4.7 · Verified</div>
+              </div>
+            </div>
+            <div class="fare-tag">₦3,800</div>
+          </div>
+          <div class="rc-route">
+            <div class="rdot"></div><div class="rline"></div>
+            <i class="ti ti-plane rplane"></i>
+            <div class="rline"></div>
+            <div class="rdot" style="background:var(--amber);"></div>
+          </div>
+          <div class="rc-stops"><span class="rc-stop-txt">Ajah</span><span class="rc-stop-txt">LOS · 08:10</span></div>
+          <div class="rc-tags">
+            <span class="tag match"><i class="ti ti-bolt" style="font-size:10px;"></i>91% match</span>
+            <span class="tag"><i class="ti ti-users" style="font-size:10px;"></i>3 seats</span>
+          </div>
+        </div>
+
+        <div class="ride-card" onclick="show('s-detail')">
+          <div class="rc-top">
+            <div class="rc-user">
+              <div class="av" style="background:#FBEAF0;color:#72243E;">BI</div>
+              <div>
+                <div class="rc-name">Bode Ikechi</div>
+                <div class="rc-meta"><span class="stars">★★★★★</span> 5.0 · Verified</div>
+              </div>
+            </div>
+            <div class="fare-tag">₦5,100</div>
+          </div>
+          <div class="rc-route">
+            <div class="rdot"></div><div class="rline"></div>
+            <i class="ti ti-plane rplane"></i>
+            <div class="rline"></div>
+            <div class="rdot" style="background:var(--amber);"></div>
+          </div>
+          <div class="rc-stops"><span class="rc-stop-txt">Ikoyi</span><span class="rc-stop-txt">LOS · 08:30</span></div>
+          <div class="rc-tags">
+            <span class="tag match"><i class="ti ti-bolt" style="font-size:10px;"></i>86% match</span>
+            <span class="tag"><i class="ti ti-users" style="font-size:10px;"></i>1 seat</span>
+          </div>
+        </div>
+        <div style="height:10px;"></div>
+      </div>
+      <div class="bnav">
+        <div class="bni" onclick="show('s-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="bni active"><i class="ti ti-search"></i>Explore</div>
+        <div class="bni" onclick="show('s-create')"><i class="ti ti-plus"></i>New trip</div>
+        <div class="bni" onclick="show('s-notifications')"><i class="ti ti-bell"></i>Alerts</div>
+        <div class="bni" onclick="show('s-profile')"><i class="ti ti-user"></i>Profile</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         RIDE DETAIL
+    ══════════════════════════════ -->
+    <div class="screen" id="s-detail">
+      <div class="sbar dark">
+        <span class="sbar-time" style="color:#fff;">9:46</span>
+        <div class="sbar-icons"><i class="ti ti-wifi" style="color:rgba(255,255,255,0.7);"></i><i class="ti ti-battery-2" style="color:rgba(255,255,255,0.7);"></i></div>
+      </div>
+      <div style="background:var(--navy-dark);padding:10px 18px 24px;flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+          <div class="nav-back" style="background:rgba(255,255,255,0.12);border-color:transparent;" onclick="show('s-results')">
+            <i class="ti ti-arrow-left" style="color:#fff;"></i>
+          </div>
+          <span style="color:#fff;font-size:15px;font-weight:700;">Ride details</span>
+          <div style="margin-left:auto;background:rgba(255,255,255,0.12);border-radius:20px;padding:5px 12px;font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;">LH 568</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:26px;font-weight:800;color:#fff;">VIC</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5);">Victoria Island</div>
+            <div style="font-size:12px;color:var(--amber);margin-top:3px;font-weight:600;">07:00 AM pickup</div>
+          </div>
+          <div style="text-align:center;flex:1;">
+            <i class="ti ti-plane" style="font-size:26px;color:rgba(255,255,255,0.4);"></i>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:2px;">~45 min</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:26px;font-weight:800;color:#fff;">LOS</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5);">MMIA Lagos</div>
+            <div style="font-size:12px;color:var(--amber);margin-top:3px;font-weight:600;">09:10 AM flight</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scroll">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:14px 18px 0;">
+          <div style="background:var(--surface);border-radius:var(--radius-sm);padding:11px 13px;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.5px;">Date</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:3px;">12 Jun 2025</div>
+          </div>
+          <div style="background:var(--surface);border-radius:var(--radius-sm);padding:11px 13px;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.5px;">Vehicle</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:3px;">Toyota Camry</div>
+          </div>
+          <div style="background:var(--surface);border-radius:var(--radius-sm);padding:11px 13px;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.5px;">Seats left</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:3px;">2 of 4</div>
+          </div>
+          <div style="background:var(--surface);border-radius:var(--radius-sm);padding:11px 13px;border:1px solid var(--border);">
+            <div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:0.5px;">Luggage</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-top:3px;">2 bags OK</div>
+          </div>
+        </div>
+
+        <div class="section-head" style="padding-top:14px;"><span class="sh-title">Organizer</span></div>
+        <div style="margin:0 18px 14px;padding:14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="av av-b" style="width:48px;height:48px;font-size:15px;">AT</div>
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:700;color:var(--text);">Amaka Tunde</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;"><span class="stars">★★★★★</span> 4.9 · 34 rides · <span style="color:var(--green);font-weight:600;">Verified ✓</span></div>
+            </div>
+            <button style="background:var(--blue-light);border:none;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              <i class="ti ti-message-circle" style="font-size:18px;color:var(--navy);"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="section-head"><span class="sh-title">Fellow passengers (2)</span></div>
+        <div style="margin:0 18px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:4px 14px;">
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border-2);">
+            <div class="av av-t" style="width:34px;height:34px;font-size:11px;">JB</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;">James B.</div>
+              <div style="font-size:11px;color:var(--text-3);">Oniru Estate</div>
+            </div>
+            <span class="stars" style="font-size:12px;">★ 4.8</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;padding:11px 0;">
+            <div class="av av-a" style="width:34px;height:34px;font-size:11px;">KO</div>
+            <div style="flex:1;">
+              <div style="font-size:13px;font-weight:600;">Kemi O.</div>
+              <div style="font-size:11px;color:var(--text-3);">Oniru Estate</div>
+            </div>
+            <span class="stars" style="font-size:12px;">★ 4.7</span>
+          </div>
+        </div>
+
+        <div class="section-head"><span class="sh-title">Cost breakdown</span></div>
+        <div style="margin:0 18px 14px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:4px 14px;">
+          <div class="cost-row"><span class="cost-label">Total ride cost</span><span class="cost-val">₦16,800</span></div>
+          <div class="cost-row"><span class="cost-label">Split between</span><span class="cost-val">4 passengers</span></div>
+          <div class="cost-row"><span class="cost-label cost-save">💰 You save</span><span class="cost-val cost-save">₦12,600 (75%)</span></div>
+          <div class="cost-row"><span class="cost-label">Airgo service fee</span><span class="cost-val">₦420</span></div>
+          <div class="cost-row" style="padding:12px 0;"><span class="cost-label" style="font-weight:700;color:var(--text);">Your total</span><span class="cost-total">₦4,620</span></div>
+        </div>
+
+        <div style="padding:4px 18px 24px;display:flex;gap:10px;">
+          <button class="btn-secondary" style="border-radius:var(--radius);" onclick="show('s-chat')"><i class="ti ti-message-circle"></i> Chat</button>
+          <button class="btn-primary" style="flex:2;" onclick="show('s-payment')"><i class="ti ti-check"></i> Join ride — ₦4,620</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PAYMENT
+    ══════════════════════════════ -->
+    <div class="screen" id="s-payment">
+      <div class="sbar light">
+        <span class="sbar-time">9:47</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="nav-hdr">
+        <div class="nav-back" onclick="show('s-detail')"><i class="ti ti-arrow-left"></i></div>
+        <div class="nav-title">Confirm &amp; Pay</div>
+      </div>
+      <div class="scroll" style="padding:16px 18px;">
+        <!-- Summary -->
+        <div style="background:var(--navy-dark);border-radius:var(--radius);padding:16px;margin-bottom:14px;color:#fff;">
+          <div style="font-size:11px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Booking summary</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="font-size:15px;font-weight:700;">Lekki → MMIA (LOS)</div><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:3px;">12 Jun · 07:45 AM · LH 568</div></div>
+            <div style="font-size:24px;font-weight:800;color:var(--amber);">₦4,620</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:10px;">Payment method</div>
+        <div style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:4px 14px;margin-bottom:14px;">
+          <div class="pm-item">
+            <div class="pm-ic">PAY</div>
+            <div style="flex:1;"><div class="pm-label">Paystack</div><div style="font-size:11px;color:var(--text-3);">Card / Bank Transfer / USSD</div></div>
+            <div style="width:18px;height:18px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;"><i class="ti ti-check" style="font-size:11px;color:#fff;"></i></div>
+          </div>
+          <div class="pm-item">
+            <div class="pm-ic" style="font-size:9px;">FLUTTER</div>
+            <div style="flex:1;"><div class="pm-label">Flutterwave</div><div style="font-size:11px;color:var(--text-3);">Card / Bank / USSD</div></div>
+            <div style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);"></div>
+          </div>
+          <div class="pm-item">
+            <div class="pm-ic"><i class="ti ti-wallet" style="font-size:14px;color:var(--navy);"></i></div>
+            <div style="flex:1;"><div class="pm-label">Airgo Wallet</div><div style="font-size:11px;color:var(--green);font-weight:600;">Balance: ₦8,400</div></div>
+            <div style="width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border);"></div>
+          </div>
+        </div>
+
+        <div style="background:var(--green-light);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+          <i class="ti ti-shield-check" style="font-size:20px;color:var(--green);flex-shrink:0;"></i>
+          <div style="font-size:12px;color:#085041;line-height:1.5;">Payment is held securely by Airgo and only released to the driver after your trip is completed.</div>
+        </div>
+
+        <button class="btn-amber" onclick="show('s-booked')">
+          <i class="ti ti-lock"></i> Pay ₦4,620 securely
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         BOOKING CONFIRMED
+    ══════════════════════════════ -->
+    <div class="screen" id="s-booked">
+      <div class="sbar dark">
+        <span class="sbar-time" style="color:#fff;">9:48</span>
+        <div class="sbar-icons"><i class="ti ti-wifi" style="color:rgba(255,255,255,0.7);"></i><i class="ti ti-battery-2" style="color:rgba(255,255,255,0.7);"></i></div>
+      </div>
+      <div style="background:var(--navy-dark);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 28px;text-align:center;position:relative;overflow:hidden;">
+        <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(29,158,117,0.08);top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+        <div style="width:88px;height:88px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:22px;box-shadow:0 0 0 16px rgba(29,158,117,0.15);z-index:1;">
+          <i class="ti ti-check" style="font-size:40px;color:#fff;"></i>
+        </div>
+        <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:8px;z-index:1;">Ride confirmed!</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.7;z-index:1;">You're all set for your trip to MMIA on <strong style="color:#fff;">12 June at 07:45 AM.</strong><br>Amaka will pick you up at Victoria Island.</div>
+      </div>
+      <div style="background:var(--surface);padding:20px 18px 32px;flex-shrink:0;">
+        <div style="background:var(--bg);border-radius:var(--radius);padding:14px;margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border-2);"><span style="color:var(--text-3);">Booking ref</span><span style="font-weight:700;color:var(--navy);">#TRP-4829</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:1px solid var(--border-2);"><span style="color:var(--text-3);">Pickup time</span><span style="font-weight:600;">07:00 AM</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;"><span style="color:var(--text-3);">Amount paid</span><span style="font-weight:700;color:var(--green);">₦4,620</span></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;">
+          <button class="btn-secondary" style="border-radius:var(--radius);" onclick="show('s-active-trip')"><i class="ti ti-map-pin"></i> Track ride</button>
+          <button class="btn-primary" style="flex:2;" onclick="show('s-chat')"><i class="ti ti-message-circle"></i> Open group chat</button>
+        </div>
+        <button class="btn-secondary" style="border-radius:var(--radius);width:100%;" onclick="show('s-home')">Back to home</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         ACTIVE TRIP / LIVE TRACKING
+    ══════════════════════════════ -->
+    <div class="screen" id="s-active-trip">
+      <div class="sbar dark">
+        <span class="sbar-time" style="color:#fff;">9:55</span>
+        <div class="sbar-icons"><i class="ti ti-wifi" style="color:rgba(255,255,255,0.7);"></i><i class="ti ti-battery-2" style="color:rgba(255,255,255,0.7);"></i></div>
+      </div>
+      <div class="trip-progress">
+        <div class="tp-label">Trip in progress</div>
+        <div class="tp-value">Driver 8 min away — heading to you</div>
+        <div class="tp-sub">Toyota Camry · KJA-234KJ · Emeka O.</div>
+      </div>
+
+      <div class="map-ph" style="height:280px;">
+        <div class="map-grid-bg"></div>
+        <div class="map-road mh" style="top:25%;"></div>
+        <div class="map-road mh main" style="top:48%;"></div>
+        <div class="map-road mh" style="top:68%;"></div>
+        <div class="map-road mh" style="top:82%;"></div>
+        <div class="map-road mv" style="left:22%;"></div>
+        <div class="map-road mv main" style="left:45%;"></div>
+        <div class="map-road mv" style="left:68%;"></div>
+        <div class="loc-pin loc-me" style="width:18px;height:18px;top:46%;left:43%;"></div>
+        <div class="loc-pin loc-pickup" style="width:14px;height:14px;top:22%;left:64%;"></div>
+        <div class="loc-pin loc-drop" style="width:14px;height:14px;top:74%;left:78%;"></div>
+        <div class="map-label" style="top:12px;left:12px;"><i class="ti ti-navigation" style="font-size:11px;color:var(--amber);"></i> Heading your way</div>
+        <div class="map-label" style="bottom:12px;left:12px;font-size:10px;"><i class="ti ti-plane" style="font-size:10px;color:rgba(255,255,255,0.5);"></i> Flight LH568 at 09:10</div>
+        <button class="sos">SOS</button>
+      </div>
+
+      <div class="scroll" style="background:var(--surface);">
+        <!-- Driver info -->
+        <div style="padding:14px 18px;border-bottom:1px solid var(--border-2);">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="av" style="background:#E6F1FB;color:#0C447C;width:48px;height:48px;font-size:15px;">EO</div>
+            <div style="flex:1;">
+              <div style="font-size:15px;font-weight:700;">Emeka Okafor</div>
+              <div style="font-size:12px;color:var(--text-3);margin-top:2px;"><span class="stars">★★★★★</span> 4.9 · 142 trips</div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button style="width:40px;height:40px;border-radius:50%;background:var(--green-light);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+                <i class="ti ti-phone" style="font-size:18px;color:var(--green);"></i>
+              </button>
+              <button style="width:40px;height:40px;border-radius:50%;background:var(--blue-light);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="show('s-chat')">
+                <i class="ti ti-message-circle" style="font-size:18px;color:var(--navy);"></i>
+              </button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <div style="flex:1;background:var(--bg);border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:18px;font-weight:700;color:var(--navy);">8 min</div>
+              <div style="font-size:10px;color:var(--text-4);margin-top:2px;">ETA pickup</div>
+            </div>
+            <div style="flex:1;background:var(--bg);border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:18px;font-weight:700;color:var(--navy);">42 min</div>
+              <div style="font-size:10px;color:var(--text-4);margin-top:2px;">To airport</div>
+            </div>
+            <div style="flex:1;background:var(--bg);border-radius:10px;padding:10px;text-align:center;">
+              <div style="font-size:18px;font-weight:700;color:var(--green);">₦4,620</div>
+              <div style="font-size:10px;color:var(--text-4);margin-top:2px;">Paid</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Passengers in this ride -->
+        <div style="padding:12px 18px;">
+          <div style="font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Co-passengers</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:7px;background:var(--bg);border-radius:10px;padding:7px 10px;border:1px solid var(--border);">
+              <div class="av av-b" style="width:28px;height:28px;font-size:10px;">JB</div>
+              <div><div style="font-size:12px;font-weight:600;">James B.</div><div style="font-size:10px;color:var(--text-3);">Oniru</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:7px;background:var(--bg);border-radius:10px;padding:7px 10px;border:1px solid var(--border);">
+              <div class="av av-a" style="width:28px;height:28px;font-size:10px;">KO</div>
+              <div><div style="font-size:12px;font-weight:600;">Kemi O.</div><div style="font-size:10px;color:var(--text-3);">Oniru</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:0 18px 26px;">
+          <button class="btn-secondary" style="border-radius:var(--radius);width:100%;" onclick="show('s-rate')">
+            <i class="ti ti-star"></i> Rate when trip ends
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         RATING SCREEN
+    ══════════════════════════════ -->
+    <div class="screen" id="s-rate">
+      <div class="sbar light">
+        <span class="sbar-time">10:52</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div style="background:var(--surface);padding:20px 18px;flex-shrink:0;border-bottom:1px solid var(--border-2);">
+        <div style="font-size:22px;font-weight:800;color:var(--text);">Trip completed! 🎉</div>
+        <div style="font-size:13px;color:var(--text-3);margin-top:5px;">You arrived at MMIA on time. How was your experience?</div>
+      </div>
+      <div class="scroll" style="padding:20px 18px;">
+        <!-- Trip summary -->
+        <div style="background:var(--green-light);border-radius:var(--radius);padding:14px;margin-bottom:20px;border:1px solid rgba(29,158,117,0.2);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div><div style="font-size:14px;font-weight:700;color:#085041;">Lekki → MMIA (LOS)</div><div style="font-size:12px;color:#0F6E56;margin-top:3px;">12 Jun · 44 min · On time</div></div>
+            <div style="text-align:right;"><div style="font-size:20px;font-weight:800;color:var(--green);">₦4,620</div><div style="font-size:11px;color:#0F6E56;">You saved ₦12,600</div></div>
+          </div>
+        </div>
+
+        <!-- Rate driver -->
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Rate your driver</div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Emeka Okafor · Toyota Camry</div>
+        <div class="rating-stars" id="driver-stars">
+          <div class="rstar" onclick="selectStar('d',1)">⭐</div>
+          <div class="rstar" onclick="selectStar('d',2)">⭐</div>
+          <div class="rstar sel" onclick="selectStar('d',3)">⭐</div>
+          <div class="rstar sel" onclick="selectStar('d',4)">⭐</div>
+          <div class="rstar sel" onclick="selectStar('d',5)">⭐</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
+          <span class="tag" style="cursor:pointer;padding:7px 12px;">Safe driver</span>
+          <span class="tag" style="cursor:pointer;padding:7px 12px;">Punctual</span>
+          <span class="tag" style="cursor:pointer;padding:7px 12px;">Clean car</span>
+          <span class="tag" style="cursor:pointer;padding:7px 12px;">Friendly</span>
+        </div>
+
+        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">Rate your co-passengers</div>
+        <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">Optional — helps keep the community safe</div>
+        <div style="display:flex;gap:10px;margin-bottom:20px;">
+          <div style="flex:1;background:var(--surface);border-radius:var(--radius-sm);padding:12px;border:1px solid var(--border);text-align:center;">
+            <div class="av av-b" style="margin:0 auto 6px;width:36px;height:36px;font-size:12px;">JB</div>
+            <div style="font-size:12px;font-weight:600;">James B.</div>
+            <div style="font-size:16px;margin-top:5px;cursor:pointer;">⭐⭐⭐⭐⭐</div>
+          </div>
+          <div style="flex:1;background:var(--surface);border-radius:var(--radius-sm);padding:12px;border:1px solid var(--border);text-align:center;">
+            <div class="av av-a" style="margin:0 auto 6px;width:36px;height:36px;font-size:12px;">KO</div>
+            <div style="font-size:12px;font-weight:600;">Kemi O.</div>
+            <div style="font-size:16px;margin-top:5px;cursor:pointer;">⭐⭐⭐⭐⭐</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="form-label">Any comments? (optional)</div>
+          <textarea class="inp" rows="3" placeholder="Great ride, smooth trip to the airport…" style="resize:none;line-height:1.5;"></textarea>
+        </div>
+        <button class="btn-primary" onclick="show('s-home')"><i class="ti ti-star"></i> Submit rating</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         CREATE TRIP
+    ══════════════════════════════ -->
+    <div class="screen" id="s-create">
+      <div class="sbar light">
+        <span class="sbar-time">9:49</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="nav-hdr">
+        <div class="nav-back" onclick="show('s-home')"><i class="ti ti-arrow-left"></i></div>
+        <div class="nav-title">Create a trip</div>
+      </div>
+      <div class="scroll" style="padding:16px 18px 100px;">
+        <div style="background:var(--navy-dark);border-radius:var(--radius);padding:14px;margin-bottom:18px;display:flex;align-items:center;gap:12px;">
+          <i class="ti ti-sparkles" style="font-size:22px;color:var(--amber);flex-shrink:0;"></i>
+          <div><div style="font-size:13px;font-weight:700;color:#fff;">Smart matching is ready</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;">Airgo finds co-travelers in your area automatically</div></div>
+        </div>
+
+        <div class="form-group"><div class="form-label">Pickup location</div>
+          <input class="inp" type="text" placeholder="Enter your address" value="Victoria Island, Lagos">
+        </div>
+        <div class="form-group"><div class="form-label">Destination airport</div>
+          <select class="inp">
+            <option>Murtala Muhammed Intl (LOS) — Lagos</option>
+            <option>Nnamdi Azikiwe Intl (ABV) — Abuja</option>
+            <option>Victor Attah Intl (QUO) — Uyo</option>
+            <option>Port Harcourt Intl (PHC)</option>
+            <option>Akanu Ibiam Intl (ENU) — Enugu</option>
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Flight details</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input class="inp" type="text" placeholder="Flight no. e.g. LH568">
+            <input class="inp" type="text" placeholder="Airline">
+          </div>
+        </div>
+        <div class="form-group"><div class="form-label">Departure date &amp; time</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <input class="inp" type="date" value="2025-06-12">
+            <input class="inp" type="time" value="09:10">
+          </div>
+        </div>
+        <div class="form-group"><div class="form-label">Luggage</div>
+          <select class="inp">
+            <option>Carry-on only</option>
+            <option selected>1 checked bag (23kg)</option>
+            <option>2 checked bags</option>
+            <option>Oversized/sports</option>
+          </select>
+        </div>
+        <div class="form-group"><div class="form-label">Travel preference</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="background:var(--surface);border:2px solid var(--navy);border-radius:var(--radius-sm);padding:12px;cursor:pointer;text-align:center;">
+              <i class="ti ti-users" style="font-size:22px;color:var(--navy);margin-bottom:6px;display:block;"></i>
+              <div style="font-size:12px;font-weight:700;color:var(--navy);">Shared ride</div>
+              <div style="font-size:10px;color:var(--text-3);margin-top:2px;">Save up to 70%</div>
+            </div>
+            <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;cursor:pointer;text-align:center;">
+              <i class="ti ti-user" style="font-size:22px;color:var(--text-3);margin-bottom:6px;display:block;"></i>
+              <div style="font-size:12px;font-weight:600;color:var(--text-3);">Private ride</div>
+              <div style="font-size:10px;color:var(--text-4);margin-top:2px;">Full vehicle</div>
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Additional notes</div>
+          <textarea class="inp" rows="2" placeholder="e.g. I have an early morning flight, please be punctual" style="resize:none;line-height:1.5;"></textarea>
+        </div>
+      </div>
+      <div style="position:sticky;bottom:0;background:var(--surface);padding:12px 18px 26px;border-top:1px solid var(--border-2);">
+        <button class="btn-primary" onclick="show('s-results')"><i class="ti ti-search"></i> Find matching rides</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         MY TRIPS
+    ══════════════════════════════ -->
+    <div class="screen" id="s-mytrips">
+      <div class="sbar light">
+        <span class="sbar-time">9:50</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="nav-hdr">
+        <div class="nav-back" onclick="show('s-home')"><i class="ti ti-arrow-left"></i></div>
+        <div class="nav-title">My trips</div>
+      </div>
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border-2);flex-shrink:0;">
+        <div onclick="tripTab('upcoming',this)" id="tt-upcoming" style="flex:1;text-align:center;padding:12px;font-size:13px;font-weight:700;color:var(--navy);border-bottom:2.5px solid var(--navy);cursor:pointer;">Upcoming</div>
+        <div onclick="tripTab('past',this)" id="tt-past" style="flex:1;text-align:center;padding:12px;font-size:13px;font-weight:600;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer;">Past</div>
+      </div>
+      <div class="scroll" id="trips-upcoming">
+        <div style="margin:14px 18px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);">
+          <div style="background:var(--navy);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:13px;font-weight:700;color:#fff;">Tomorrow, 12 Jun 2025</div>
+            <span class="badge" style="background:rgba(232,184,75,0.2);color:var(--amber);border:none;">Confirmed</span>
+          </div>
+          <div style="padding:14px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div><div style="font-size:15px;font-weight:700;">Lekki → MMIA (LOS)</div><div style="font-size:12px;color:var(--text-3);margin-top:3px;">07:45 AM · LH 568 · 3 co-travelers</div></div>
+              <div style="font-size:18px;font-weight:700;color:var(--green);">₦4,620</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+              <div class="av av-b" style="width:28px;height:28px;font-size:10px;">AT</div>
+              <div class="av av-t" style="width:28px;height:28px;font-size:10px;">JB</div>
+              <div class="av av-a" style="width:28px;height:28px;font-size:10px;">KO</div>
+              <span style="font-size:11px;color:var(--text-3);">+ driver Emeka</span>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn-secondary" style="border-radius:var(--radius-sm);flex:1;padding:10px;" onclick="show('s-active-trip')"><i class="ti ti-map-pin"></i> Track</button>
+              <button class="btn-primary" style="flex:1;padding:10px;border-radius:var(--radius-sm);" onclick="show('s-chat')"><i class="ti ti-message-circle"></i> Chat</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="scroll" id="trips-past" style="display:none;">
+        <div style="padding:0 18px;">
+          <div style="border-bottom:1px solid var(--border-2);padding:14px 0;display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div style="width:40px;height:40px;background:var(--green-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--green);flex-shrink:0;"><i class="ti ti-plane-departure"></i></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:700;">VI → LOS (MMIA)</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;">5 Jun · 2 co-travelers · ⭐ 5.0</div></div>
+            <div style="text-align:right;"><div style="font-size:14px;font-weight:700;color:var(--navy);">₦3,900</div><div style="font-size:10px;color:var(--green);margin-top:2px;">Saved ₦11.7k</div></div>
+          </div>
+          <div style="border-bottom:1px solid var(--border-2);padding:14px 0;display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div style="width:40px;height:40px;background:var(--blue-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--navy);flex-shrink:0;"><i class="ti ti-plane-arrival"></i></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:700;">LOS → Ikoyi (return)</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;">4 Jun · 1 co-traveler · ⭐ 4.8</div></div>
+            <div style="text-align:right;"><div style="font-size:14px;font-weight:700;color:var(--navy);">₦2,800</div><div style="font-size:10px;color:var(--green);margin-top:2px;">Saved ₦2.8k</div></div>
+          </div>
+          <div style="padding:14px 0;display:flex;align-items:center;gap:12px;cursor:pointer;">
+            <div style="width:40px;height:40px;background:var(--green-light);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--green);flex-shrink:0;"><i class="ti ti-plane-departure"></i></div>
+            <div style="flex:1;"><div style="font-size:13px;font-weight:700;">Lekki → ABV (Abuja)</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;">28 May · 3 co-travelers · ⭐ 5.0</div></div>
+            <div style="text-align:right;"><div style="font-size:14px;font-weight:700;color:var(--navy);">₦6,100</div><div style="font-size:10px;color:var(--green);margin-top:2px;">Saved ₦18.3k</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bni" onclick="show('s-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="bni" onclick="show('s-results')"><i class="ti ti-search"></i>Explore</div>
+        <div class="bni" onclick="show('s-create')"><i class="ti ti-plus"></i>New trip</div>
+        <div class="bni" onclick="show('s-notifications')"><i class="ti ti-bell"></i>Alerts</div>
+        <div class="bni active"><i class="ti ti-route"></i>Trips</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         CHAT
+    ══════════════════════════════ -->
+    <div class="screen" id="s-chat">
+      <div class="sbar dark">
+        <span class="sbar-time" style="color:#fff;">9:51</span>
+        <div class="sbar-icons"><i class="ti ti-wifi" style="color:rgba(255,255,255,0.7);"></i><i class="ti ti-battery-2" style="color:rgba(255,255,255,0.7);"></i></div>
+      </div>
+      <div style="background:var(--navy-dark);padding:10px 18px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;">
+        <div class="nav-back" style="background:rgba(255,255,255,0.12);border-color:transparent;" onclick="show('s-booked')">
+          <i class="ti ti-arrow-left" style="color:#fff;"></i>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:700;color:#fff;">Ride group · #TRP-4829</div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;">4 members · Lekki → LOS</div>
+        </div>
+        <div style="display:flex;">
+          <div class="av av-b" style="width:26px;height:26px;font-size:9px;margin-right:-8px;border:2px solid var(--navy-dark);">AT</div>
+          <div class="av av-t" style="width:26px;height:26px;font-size:9px;margin-right:-8px;border:2px solid var(--navy-dark);">JB</div>
+          <div class="av av-a" style="width:26px;height:26px;font-size:9px;margin-right:-8px;border:2px solid var(--navy-dark);">KO</div>
+          <div class="av" style="width:26px;height:26px;font-size:9px;background:#E6F1FB;color:#0C447C;border:2px solid var(--navy-dark);">EO</div>
+        </div>
+      </div>
+
+      <div class="scroll" style="padding:14px 18px;background:var(--bg);">
+        <div style="text-align:center;font-size:11px;color:var(--text-4);background:var(--surface);border-radius:20px;padding:4px 14px;display:inline-block;margin:0 auto 14px;display:block;max-width:200px;">Today, 7:02 AM</div>
+
+        <div class="msg">
+          <div class="msg-av av-b" style="width:28px;height:28px;font-size:9px;">AT</div>
+          <div>
+            <div class="bubble them">Hi everyone! I'm Amaka, the organizer. I'll pick you all up as planned 🛫</div>
+            <div class="msg-time">07:02 AM</div>
+          </div>
+        </div>
+        <div class="msg">
+          <div class="msg-av av-t" style="width:28px;height:28px;font-size:9px;">JB</div>
+          <div>
+            <div class="bubble them">Great, I'll be ready at Oniru gate by 7:30 👍</div>
+            <div class="msg-time">07:08 AM</div>
+          </div>
+        </div>
+        <div class="msg me">
+          <div class="msg-av av-a" style="width:28px;height:28px;font-size:9px;">DA</div>
+          <div>
+            <div class="bubble me">Same here! I have 1 large suitcase FYI</div>
+            <div class="msg-time">07:15 AM</div>
+          </div>
+        </div>
+        <div class="msg">
+          <div class="msg-av av-b" style="width:28px;height:28px;font-size:9px;">AT</div>
+          <div>
+            <div class="bubble them">No problem, the Camry has a large boot 😊</div>
+            <div class="msg-time">07:18 AM</div>
+          </div>
+        </div>
+        <div class="msg">
+          <div class="msg-av" style="background:#E6F1FB;color:#0C447C;width:28px;height:28px;font-size:9px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;">EO</div>
+          <div>
+            <div class="bubble them">👋 Driver Emeka here. I'm 8 minutes away!</div>
+            <div class="msg-time">08:52 AM</div>
+          </div>
+        </div>
+        <div style="height:10px;"></div>
+      </div>
+
+      <div class="chat-input-row">
+        <input class="chat-inp" type="text" placeholder="Type a message…">
+        <button class="send-btn"><i class="ti ti-send" style="font-size:17px;color:#fff;"></i></button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         NOTIFICATIONS
+    ══════════════════════════════ -->
+    <div class="screen" id="s-notifications">
+      <div class="sbar light">
+        <span class="sbar-time">9:52</span>
+        <div class="sbar-icons"><i class="ti ti-wifi"></i><i class="ti ti-battery-2"></i></div>
+      </div>
+      <div class="nav-hdr">
+        <div class="nav-back" onclick="show('s-home')"><i class="ti ti-arrow-left"></i></div>
+        <div class="nav-title">Notifications</div>
+        <span style="margin-left:auto;font-size:12px;color:var(--navy);font-weight:600;cursor:pointer;">Mark all read</span>
+      </div>
+      <div class="scroll">
+        <div class="notif-item" onclick="show('s-active-trip')">
+          <div class="notif-dot" style="background:var(--amber);"></div>
+          <div class="notif-ic" style="background:var(--amber-light);color:var(--amber);"><i class="ti ti-car"></i></div>
+          <div style="flex:1;">
+            <div class="notif-title">Driver is 8 minutes away!</div>
+            <div class="notif-sub">Emeka (Toyota Camry · KJA-234KJ) is heading to your pickup point.</div>
+            <div class="notif-time">Just now</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot" style="background:var(--green);"></div>
+          <div class="notif-ic" style="background:var(--green-light);color:var(--green);"><i class="ti ti-check"></i></div>
+          <div style="flex:1;">
+            <div class="notif-title">Ride confirmed — ₦4,620 paid</div>
+            <div class="notif-sub">Your seat on Amaka's ride to LOS is secured. Ref: #TRP-4829</div>
+            <div class="notif-time">2 hours ago</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot"></div>
+          <div class="notif-ic" style="background:var(--blue-light);color:var(--navy);"><i class="ti ti-bolt"></i></div>
+          <div style="flex:1;">
+            <div class="notif-title">New match found!</div>
+            <div class="notif-sub">Amaka T. is heading to LOS at 07:45 AM — 98% match with your route.</div>
+            <div class="notif-time">3 hours ago</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot"></div>
+          <div class="notif-ic" style="background:#FAEEDA;color:#633806;"><i class="ti ti-star"></i></div>
+          <div style="flex:1;">
+            <div class="notif-title">You have 1,240 Airgo points</div>
+            <div class="notif-sub">You're 62% to Premium. 620 more points unlocks priority matching and lower fees.</div>
+            <div class="notif-time">Yesterday</div>
+          </div>
+        </div>
+        <div class="notif-item">
+          <div class="notif-dot"></div>
+          <div class="notif-ic" style="background:var(--bg);color:var(--text-3);"><i class="ti ti-message-circle"></i></div>
+          <div style="flex:1;">
+            <div class="notif-title">New message from Amaka T.</div>
+            <div class="notif-sub">"Hi everyone! I'm Amaka, the organizer. I'll pick you all up…"</div>
+            <div class="notif-time">Yesterday</div>
+          </div>
+        </div>
+      </div>
+      <div class="bnav">
+        <div class="bni" onclick="show('s-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="bni" onclick="show('s-results')"><i class="ti ti-search"></i>Explore</div>
+        <div class="bni" onclick="show('s-create')"><i class="ti ti-plus"></i>New trip</div>
+        <div class="bni active"><i class="ti ti-bell"></i>Alerts</div>
+        <div class="bni" onclick="show('s-profile')"><i class="ti ti-user"></i>Profile</div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════
+         PROFILE
+    ══════════════════════════════ -->
+    <div class="screen" id="s-profile">
+      <div class="sbar dark">
+        <span class="sbar-time" style="color:#fff;">9:53</span>
+        <div class="sbar-icons"><i class="ti ti-wifi" style="color:rgba(255,255,255,0.7);"></i><i class="ti ti-battery-2" style="color:rgba(255,255,255,0.7);"></i></div>
+      </div>
+      <div class="profile-hero">
+        <div class="profile-av">DA</div>
+        <div class="profile-name">David Adeyemi</div>
+        <div class="profile-tag">Business traveler · Lagos</div>
+        <div class="verify-chip"><i class="ti ti-shield-check" style="font-size:13px;"></i> Verified</div>
+      </div>
+      <div class="stat-strip">
+        <div class="stat-box"><div class="stat-num">24</div><div class="stat-lbl">Trips</div></div>
+        <div class="stat-box"><div class="stat-num">4.8</div><div class="stat-lbl">Rating</div></div>
+        <div class="stat-box"><div class="stat-num">₦142k</div><div class="stat-lbl">Saved</div></div>
+      </div>
+      <div class="scroll" style="margin-top:18px;">
+        <div class="menu-list" style="background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:0 0 0 0;overflow:hidden;">
+          <div class="menu-item" style="padding:13px 16px;">
+            <div class="menu-ic" style="background:var(--blue-light);color:var(--navy);"><i class="ti ti-user"></i></div>
+            <span class="menu-label">Edit profile</span>
+            <i class="ti ti-chevron-right menu-chev"></i>
+          </div>
+          <div class="menu-item" style="padding:13px 16px;" onclick="show('s-mytrips')">
+            <div class="menu-ic" style="background:var(--green-light);color:var(--green);"><i class="ti ti-route"></i></div>
+            <span class="menu-label">Trip history</span>
+            <i class="ti ti-chevron-right menu-chev"></i>
+          </div>
+          <div class="menu-item" style="padding:13px 16px;">
+            <div class="menu-ic" style="background:var(--amber-light);color:var(--amber-dark);"><i class="ti ti-credit-card"></i></div>
+            <span class="menu-label">Payment methods</span>
+            <i class="ti ti-chevron-right menu-chev"></i>
+          </div>
+          <div class="menu-item" style="padding:13px 16px;">
+            <div class="menu-ic" style="background:#FBEAF0;color:#72243E;"><i class="ti ti-star"></i></div>
+            <span class="menu-label">Airgo Premium</span>
+            <div style="background:var(--amber);color:var(--navy-dark);font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;margin-right:8px;">UPGRADE</div>
+            <i class="ti ti-chevron-right menu-chev"></i>
+          </div>
+          <div class="menu-item" style="padding:13px 16px;">
+            <div class="menu-ic" style="background:var(--bg);color:var(--text-3);"><i class="ti ti-shield-lock"></i></div>
+            <span class="menu-label">Privacy &amp; safety</span>
+            <i class="ti ti-chevron-right menu-chev"></i>
+          </div>
+          <div class="menu-item" style="padding:13px 16px;">
+            <div class="menu-ic" style="background:var(--bg);color:var(--text-3);"><i class="ti ti-help-circle"></i></div>
+            <span class="menu-label">Help &amp; support</span>
+            <i class="ti ti-chevron-right menu-chev"></i>
+          </div>
+          <div class="menu-item" style="padding:13px 16px;border-bottom:none;" onclick="show('s-onboard')">
+            <div class="menu-ic" style="background:var(--red-light);color:var(--red);"><i class="ti ti-logout"></i></div>
+            <span class="menu-label" style="color:var(--red);">Sign out</span>
+          </div>
+        </div>
+      </div>
+      <div class="bnav" style="margin-top:auto;">
+        <div class="bni" onclick="show('s-home')"><i class="ti ti-home"></i>Home</div>
+        <div class="bni" onclick="show('s-results')"><i class="ti ti-search"></i>Explore</div>
+        <div class="bni" onclick="show('s-create')"><i class="ti ti-plus"></i>New trip</div>
+        <div class="bni" onclick="show('s-notifications')"><i class="ti ti-bell"></i>Alerts</div>
+        <div class="bni active"><i class="ti ti-user"></i>Profile</div>
+      </div>
+    </div>
+
+  </div><!-- end screen-wrap -->
+</div><!-- end shell -->
+
+<script>
+// Auto-advance splash
+setTimeout(() => show('s-onboard'), 2200);
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  if (el) el.classList.add('active');
+}
+
+function tripTab(tab, el) {
+  document.getElementById('trips-upcoming').style.display = tab === 'upcoming' ? '' : 'none';
+  document.getElementById('trips-past').style.display = tab === 'past' ? '' : 'none';
+  document.getElementById('tt-upcoming').style.color = tab === 'upcoming' ? 'var(--navy)' : 'var(--text-3)';
+  document.getElementById('tt-upcoming').style.borderBottom = tab === 'upcoming' ? '2.5px solid var(--navy)' : '2px solid transparent';
+  document.getElementById('tt-past').style.color = tab === 'past' ? 'var(--navy)' : 'var(--text-3)';
+  document.getElementById('tt-past').style.borderBottom = tab === 'past' ? '2.5px solid var(--navy)' : '2px solid transparent';
+}
+
+function selectStar(type, n) {
+  const stars = document.querySelectorAll('#driver-stars .rstar');
+  stars.forEach((s, i) => s.classList.toggle('sel', i < n));
+}
+</script>
+<script src="frontend-api.js"></script>
+</body>
+</html>
+
+

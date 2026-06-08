@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIRGO – Airport Ride Sharing Platform</title>
+<meta name="description" content="AIRGO is a modern airport ride-sharing platform connecting passengers heading to the same airport. Split the ride, share the cost.">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #0F3460;
+  --navy-dark: #091f3c;
+  --navy-mid: #16427a;
+  --amber: #E8B84B;
+  --amber-dark: #c99a30;
+  --amber-light: #fdf3d9;
+  --green: #1D9E75;
+  --green-light: #E1F5EE;
+  --red: #E24B4A;
+  --red-light: #FCEBEB;
+  --blue-light: #E6F1FB;
+  --text: #111827;
+  --text-2: #374151;
+  --text-3: #6b7280;
+  --text-4: #9ca3af;
+  --bg: #f7f8fc;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.14);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: #0a0a18;
+  color: #fff;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* -- ANIMATED BACKGROUND -- */
+.bg-canvas {
+  position: fixed; inset: 0; z-index: 0; overflow: hidden;
+  background: radial-gradient(ellipse 80% 60% at 60% -10%, rgba(15,52,96,0.6) 0%, transparent 70%),
+              radial-gradient(ellipse 60% 50% at -10% 80%, rgba(29,158,117,0.15) 0%, transparent 70%),
+              #0a0a18;
+}
+.bg-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px); opacity: 0.35; animation: drift 18s ease-in-out infinite;
+}
+.bg-orb-1 { width: 600px; height: 600px; background: var(--navy); top: -200px; right: -200px; animation-delay: 0s; }
+.bg-orb-2 { width: 400px; height: 400px; background: #1a3a6e; bottom: -100px; left: -100px; animation-delay: -6s; }
+.bg-orb-3 { width: 300px; height: 300px; background: var(--green); top: 40%; right: 10%; opacity: 0.12; animation-delay: -12s; }
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* Grid lines */
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* -- EVERYTHING ABOVE BACKGROUND -- */
+.page { position: relative; z-index: 1; }
+
+/* -- NAV -- */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 40px;
+  background: rgba(10,10,24,0.75); backdrop-filter: blur(20px) saturate(1.4);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.nav-logo {
+  width: 40px; height: 40px; background: var(--amber); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; color: var(--navy-dark); flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(232,184,75,0.4);
+}
+.nav-wordmark { font-size: 22px; font-weight: 800; color: #fff; letter-spacing: 2px; }
+.nav-tag { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: -2px; letter-spacing: 0.5px; }
+.nav-links { display: flex; align-items: center; gap: 8px; }
+.nav-link {
+  padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+  color: rgba(255,255,255,0.7); text-decoration: none; transition: all 0.15s;
+}
+.nav-link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.nav-cta {
+  padding: 9px 20px; border-radius: 10px; font-size: 13px; font-weight: 700;
+  background: var(--amber); color: var(--navy-dark); text-decoration: none; transition: all 0.15s;
+  box-shadow: 0 4px 12px rgba(232,184,75,0.3);
+}
+.nav-cta:hover { background: var(--amber-dark); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(232,184,75,0.4); }
+
+/* -- HERO -- */
+.hero {
+  text-align: center;
+  padding: 90px 24px 60px;
+  max-width: 840px; margin: 0 auto;
+}
+.hero-kicker {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(232,184,75,0.12); border: 1px solid rgba(232,184,75,0.25);
+  border-radius: 24px; padding: 6px 16px; font-size: 12px; font-weight: 600;
+  color: var(--amber); letter-spacing: 0.5px; margin-bottom: 24px;
+  animation: fadeUp 0.6s ease both;
+}
+.hero-title {
+  font-size: clamp(42px, 7vw, 76px); font-weight: 800; line-height: 1.08;
+  letter-spacing: -1px; margin-bottom: 20px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+.hero-title .accent { color: var(--amber); }
+.hero-title .accent-green { color: #6EE7B7; }
+.hero-sub {
+  font-size: 18px; color: rgba(255,255,255,0.55); line-height: 1.7;
+  max-width: 580px; margin: 0 auto 36px;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+.hero-chips {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 48px; animation: fadeUp 0.6s 0.3s ease both;
+}
+.chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 24px; font-size: 13px; font-weight: 500;
+  border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.06); backdrop-filter: blur(8px);
+}
+.chip i { font-size: 15px; }
+.chip.amber { color: var(--amber); border-color: rgba(232,184,75,0.25); background: rgba(232,184,75,0.08); }
+.chip.green { color: #6EE7B7; border-color: rgba(110,231,183,0.2); background: rgba(110,231,183,0.06); }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* -- APP CARDS -- */
+.cards-section {
+  max-width: 1100px; margin: 0 auto; padding: 0 24px 80px;
+}
+.cards-label {
+  text-align: center; font-size: 12px; font-weight: 600; letter-spacing: 1px;
+  color: rgba(255,255,255,0.35); text-transform: uppercase; margin-bottom: 32px;
+}
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.app-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 28px;
+  text-decoration: none;
+  color: inherit;
+  display: flex; flex-direction: column;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  animation: fadeUp 0.6s ease both;
+}
+.app-card:nth-child(1) { animation-delay: 0.1s; }
+.app-card:nth-child(2) { animation-delay: 0.2s; }
+.app-card:nth-child(3) { animation-delay: 0.3s; }
+.app-card:nth-child(4) { animation-delay: 0.4s; }
+.app-card::before {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 24px; opacity: 0;
+  transition: opacity 0.25s;
+}
+.app-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.4);
+}
+.app-card:hover::before { opacity: 1; }
+
+/* Colour accent per card */
+.card-passenger { border-top: 3px solid var(--navy); }
+.card-passenger::before { background: linear-gradient(135deg, rgba(15,52,96,0.12), transparent); }
+.card-driver { border-top: 3px solid var(--amber); }
+.card-driver::before { background: linear-gradient(135deg, rgba(232,184,75,0.12), transparent); }
+.card-admin { border-top: 3px solid var(--green); }
+.card-admin::before { background: linear-gradient(135deg, rgba(29,158,117,0.12), transparent); }
+.card-guide { border-top: 3px solid var(--red); }
+.card-guide::before { background: linear-gradient(135deg, rgba(226,75,74,0.08), transparent); }
+
+.card-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px; margin-bottom: 20px; flex-shrink: 0;
+}
+.ci-passenger { background: rgba(15,52,96,0.4); color: #7EB8FF; }
+.ci-driver { background: rgba(232,184,75,0.2); color: var(--amber); }
+.ci-admin { background: rgba(29,158,117,0.2); color: #6EE7B7; }
+.ci-guide { background: rgba(226,75,74,0.15); color: #FCA5A5; }
+
+.card-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 10px; border-radius: 12px; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; width: fit-content;
+}
+.cb-complete { background: rgba(29,158,117,0.2); color: #6EE7B7; }
+.cb-guide { background: rgba(232,184,75,0.15); color: var(--amber); }
+
+.card-title { font-size: 20px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.card-desc { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.65; flex: 1; margin-bottom: 20px; }
+.card-features { list-style: none; margin-bottom: 24px; }
+.card-features li {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: rgba(255,255,255,0.6);
+  padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.card-features li:last-child { border-bottom: none; }
+.card-features li i { font-size: 14px; flex-shrink: 0; }
+.fi-passenger { color: #7EB8FF; }
+.fi-driver { color: var(--amber); }
+.fi-admin { color: #6EE7B7; }
+.fi-guide { color: #FCA5A5; }
+
+.card-cta {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px; border-radius: 14px; font-size: 13px; font-weight: 700;
+  transition: all 0.15s; border: none; cursor: pointer; width: 100%;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.cta-passenger { background: var(--navy); color: #fff; }
+.cta-passenger:hover { background: var(--navy-mid); }
+.cta-driver { background: rgba(232,184,75,0.15); color: var(--amber); border: 1px solid rgba(232,184,75,0.3); }
+.cta-driver:hover { background: rgba(232,184,75,0.25); }
+.cta-admin { background: rgba(29,158,117,0.15); color: #6EE7B7; border: 1px solid rgba(29,158,117,0.25); }
+.cta-admin:hover { background: rgba(29,158,117,0.25); }
+.cta-guide { background: rgba(226,75,74,0.12); color: #FCA5A5; border: 1px solid rgba(226,75,74,0.2); }
+.cta-guide:hover { background: rgba(226,75,74,0.2); }
+
+/* -- STATS STRIP -- */
+.stats-strip {
+  display: flex; justify-content: center; gap: 0;
+  max-width: 700px; margin: 0 auto 80px; padding: 0 24px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px; backdrop-filter: blur(12px);
+  animation: fadeUp 0.6s 0.5s ease both;
+}
+.stat {
+  flex: 1; text-align: center; padding: 24px 16px;
+  border-right: 1px solid rgba(255,255,255,0.07);
+}
+.stat:last-child { border-right: none; }
+.stat-num { font-size: 28px; font-weight: 800; color: var(--amber); line-height: 1; }
+.stat-lbl { font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* -- HOW IT WORKS -- */
+.how-section {
+  max-width: 900px; margin: 0 auto 80px; padding: 0 24px;
+  text-align: center;
+}
+.section-heading {
+  font-size: 14px; font-weight: 600; letter-spacing: 1px; color: var(--amber);
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.section-title-lg {
+  font-size: clamp(28px, 4vw, 42px); font-weight: 800; color: #fff;
+  margin-bottom: 12px; line-height: 1.15;
+}
+.section-sub-lg {
+  font-size: 16px; color: rgba(255,255,255,0.5); margin-bottom: 48px; line-height: 1.6;
+}
+.steps-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+.step-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 20px; padding: 28px 22px; text-align: left;
+  position: relative; overflow: hidden; backdrop-filter: blur(8px);
+}
+.step-num {
+  font-size: 48px; font-weight: 800; opacity: 0.06;
+  position: absolute; top: 12px; right: 18px; line-height: 1;
+  font-family: 'DM Mono', monospace;
+}
+.step-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; margin-bottom: 14px;
+  background: rgba(232,184,75,0.12); color: var(--amber);
+}
+.step-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.step-desc { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+/* -- TECH STACK -- */
+.tech-section {
+  max-width: 900px; margin: 0 auto 80px; padding: 0 24px;
+}
+.tech-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.tech-pill {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 10px 16px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.8);
+  backdrop-filter: blur(8px); transition: all 0.15s;
+}
+.tech-pill:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.18); }
+.tech-pill i { font-size: 16px; color: var(--amber); }
+
+/* -- FOOTER -- */
+.footer {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding: 32px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+}
+.footer-brand { display: flex; align-items: center; gap: 10px; }
+.footer-logo {
+  width: 32px; height: 32px; background: var(--amber); border-radius: 9px;
+  display: flex; align-items: center; justify-content: center; font-size: 16px; color: var(--navy-dark);
+}
+.footer-name { font-size: 16px; font-weight: 800; letter-spacing: 1.5px; color: #fff; }
+.footer-copy { font-size: 12px; color: rgba(255,255,255,0.3); }
+.footer-links { display: flex; gap: 4px; }
+.footer-link {
+  padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.5); text-decoration: none; transition: all 0.15s;
+}
+.footer-link:hover { color: #fff; background: rgba(255,255,255,0.07); }
+
+/* -- RESPONSIVE -- */
+@media (max-width: 640px) {
+  .nav { padding: 14px 20px; }
+  .nav-links .nav-link { display: none; }
+  .hero { padding: 60px 20px 40px; }
+  .cards-grid { grid-template-columns: 1fr; }
+  .stats-strip { flex-direction: column; }
+  .stat { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .stat:last-child { border-bottom: none; }
+  .footer { flex-direction: column; align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+<div class="bg-canvas">
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+</div>
+<div class="bg-grid"></div>
+
+<div class="page">
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="#" class="nav-brand">
+      <div class="nav-logo"><i class="ti ti-plane"></i></div>
+      <div>
+        <div class="nav-wordmark">AIRGO</div>
+        <div class="nav-tag">Airport Ride Sharing</div>
+      </div>
+    </a>
+    <div class="nav-links">
+      <a href="#apps" class="nav-link">Apps</a>
+      <a href="#how" class="nav-link">How it works</a>
+      <a href="passenger-app.html" class="nav-cta"><i class="ti ti-plane" style="font-size:14px;"></i> Open App</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-kicker">
+      <i class="ti ti-sparkles" style="font-size:13px;"></i>
+      Nigeria's Airport Ride-Sharing Platform
+    </div>
+    <h1 class="hero-title">
+      Share the Ride,<br>
+      <span class="accent">Split the Cost</span>
+    </h1>
+    <p class="hero-sub">
+      Connect with co-travelers heading to the same airport. Save up to 70% on every journey — fully designed and ready to launch.
+    </p>
+    <div class="hero-chips">
+      <span class="chip amber"><i class="ti ti-device-mobile"></i> Passenger App</span>
+      <span class="chip"><i class="ti ti-steering-wheel"></i> Driver App</span>
+      <span class="chip"><i class="ti ti-dashboard"></i> Admin Console</span>
+      <span class="chip green"><i class="ti ti-currency-naira"></i> ₦0 to launch</span>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-strip">
+    <div class="stat"><div class="stat-num">70%</div><div class="stat-lbl">Cost saved per trip</div></div>
+    <div class="stat"><div class="stat-num">4</div><div class="stat-lbl">Complete app files</div></div>
+    <div class="stat"><div class="stat-num">₦0</div><div class="stat-lbl">To go live</div></div>
+    <div class="stat"><div class="stat-num">LOS · ABV · PHC · QUO</div><div class="stat-lbl">Airports covered</div></div>
+  </div>
+
+  <!-- APP CARDS -->
+  <section class="cards-section" id="apps">
+    <div class="cards-label">Select a module to launch</div>
+    <div class="cards-grid">
+
+      <!-- PASSENGER APP -->
+      <a href="passenger-app.html" class="app-card card-passenger">
+        <div class="card-icon ci-passenger"><i class="ti ti-device-mobile"></i></div>
+        <div class="card-badge cb-complete"><i class="ti ti-check" style="font-size:10px;"></i> Complete</div>
+        <div class="card-title">Passenger App</div>
+        <div class="card-desc">Full mobile experience from splash screen to post-trip rating. Styled like a real iOS app.</div>
+        <ul class="card-features">
+          <li><i class="ti ti-user-plus fi-passenger"></i> Register / Sign in / OTP verify</li>
+          <li><i class="ti ti-search fi-passenger"></i> Find &amp; book matching rides</li>
+          <li><i class="ti ti-map-pin fi-passenger"></i> Live trip tracking with map</li>
+          <li><i class="ti ti-message-circle fi-passenger"></i> In-ride passenger chat</li>
+          <li><i class="ti ti-star fi-passenger"></i> Post-trip ratings &amp; loyalty points</li>
+          <li><i class="ti ti-credit-card fi-passenger"></i> Payment flow (Paystack-ready)</li>
+        </ul>
+        <button class="card-cta cta-passenger">
+          <span>Open Passenger App</span>
+          <i class="ti ti-arrow-right"></i>
+        </button>
+      </a>
+
+      <!-- DRIVER APP -->
+      <a href="driver-app.html" class="app-card card-driver">
+        <div class="card-icon ci-driver"><i class="ti ti-steering-wheel"></i></div>
+        <div class="card-badge cb-complete"><i class="ti ti-check" style="font-size:10px;"></i> Complete</div>
+        <div class="card-title">Driver App</div>
+        <div class="card-desc">Complete driver experience from going online to completing trips and tracking earnings.</div>
+        <ul class="card-features">
+          <li><i class="ti ti-toggle-right fi-driver"></i> Online / Offline toggle</li>
+          <li><i class="ti ti-bell fi-driver"></i> Incoming ride request &amp; countdown</li>
+          <li><i class="ti ti-route fi-driver"></i> Active trip with multi-stop navigation</li>
+          <li><i class="ti ti-users fi-driver"></i> Passenger list &amp; chat</li>
+          <li><i class="ti ti-coin fi-driver"></i> Earnings dashboard with chart</li>
+          <li><i class="ti ti-history fi-driver"></i> Full trip history &amp; KYC profile</li>
+        </ul>
+        <button class="card-cta cta-driver">
+          <span>Open Driver App</span>
+          <i class="ti ti-arrow-right"></i>
+        </button>
+      </a>
+
+      <!-- ADMIN DASHBOARD -->
+      <a href="admin-dashboard.html" class="app-card card-admin">
+        <div class="card-icon ci-admin"><i class="ti ti-dashboard"></i></div>
+        <div class="card-badge cb-complete"><i class="ti ti-check" style="font-size:10px;"></i> Complete</div>
+        <div class="card-title">Admin Dashboard</div>
+        <div class="card-desc">Full-featured operations console with live KPIs, user management, analytics, and settings.</div>
+        <ul class="card-features">
+          <li><i class="ti ti-chart-bar fi-admin"></i> Live KPIs: trips, revenue, match rate</li>
+          <li><i class="ti ti-route fi-admin"></i> Trip management &amp; search/filter</li>
+          <li><i class="ti ti-users fi-admin"></i> User &amp; driver management</li>
+          <li><i class="ti ti-alert-triangle fi-admin"></i> Disputes resolution centre</li>
+          <li><i class="ti ti-coin fi-admin"></i> Pricing rules &amp; surge control</li>
+          <li><i class="ti ti-plane-departure fi-admin"></i> Airport zone management</li>
+        </ul>
+        <button class="card-cta cta-admin">
+          <span>Open Admin Console</span>
+          <i class="ti ti-arrow-right"></i>
+        </button>
+      </a>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how-section" id="how">
+    <div class="section-heading">How AIRGO works</div>
+    <h2 class="section-title-lg">Smart matching for airport trips</h2>
+    <p class="section-sub-lg">Our algorithm connects co-travelers with the same airport, flight window, and nearby pickup locations.</p>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-num">01</div>
+        <div class="step-icon"><i class="ti ti-user-plus"></i></div>
+        <div class="step-title">Passenger registers</div>
+        <div class="step-desc">Sign up with phone number, verify OTP, and set your home city.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">02</div>
+        <div class="step-icon"><i class="ti ti-search"></i></div>
+        <div class="step-title">Search for a ride</div>
+        <div class="step-desc">Enter pickup location, target airport, date and time. The app finds matches instantly.</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">03</div>
+        <div class="step-icon"><i class="ti ti-bolt"></i></div>
+        <div class="step-title">Smart matching</div>
+        <div class="step-desc">Scores trips by airport (40%), flight time (30%), pickup distance (20%), and luggage (10%).</div>
+      </div>
+      <div class="step-card">
+        <div class="step-num">04</div>
+        <div class="step-icon"><i class="ti ti-credit-card"></i></div>
+        <div class="step-title">Book &amp; pay</div>
+        <div class="step-desc">Pay securely via Paystack. Funds are held until trip completion, then released to the driver.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section class="tech-section">
+    <div style="text-align:center; margin-bottom:32px;">
+      <div class="section-heading">Technology stack</div>
+      <h2 class="section-title-lg" style="font-size:clamp(22px,3vw,32px);">Production-ready with free services</h2>
+    </div>
+    <div class="tech-grid">
+      <div class="tech-pill"><i class="ti ti-brand-html5"></i> Vanilla HTML / CSS / JS</div>
+      <div class="tech-pill"><i class="ti ti-database"></i> Supabase (Database + Auth)</div>
+      <div class="tech-pill"><i class="ti ti-credit-card"></i> Paystack (Payments)</div>
+      <div class="tech-pill"><i class="ti ti-map"></i> Google Maps API (Tracking)</div>
+      <div class="tech-pill"><i class="ti ti-bell"></i> Firebase (Push Notifications)</div>
+      <div class="tech-pill"><i class="ti ti-cloud-upload"></i> Netlify (Free Hosting)</div>
+      <div class="tech-pill"><i class="ti ti-mail"></i> Resend (Transactional Email)</div>
+      <div class="tech-pill"><i class="ti ti-device-mobile"></i> PWA (App Store-ready)</div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-brand">
+      <div class="footer-logo"><i class="ti ti-plane"></i></div>
+      <div>
+        <div class="footer-name">AIRGO</div>
+        <div class="footer-copy">Airport Ride Sharing · Nigeria</div>
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="passenger-app.html" class="footer-link">Passenger App</a>
+      <a href="driver-app.html" class="footer-link">Driver App</a>
+      <a href="admin-dashboard.html" class="footer-link">Admin</a>
+    </div>
+  </footer>
+
+</div>
+
+<script src="frontend-api.js"></script>
+<script>
+// Smooth scroll for anchor links
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+  });
+});
+
+// Intersection observer for fade-in on scroll
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.style.animationPlayState = 'running'; } });
+}, { threshold: 0.1 });
+document.querySelectorAll('.step-card, .tech-pill').forEach(el => {
+  el.style.opacity = '0';
+  el.style.animation = 'fadeUp 0.5s ease both paused';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
+
+
