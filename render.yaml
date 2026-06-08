@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: airgo
+    runtime: node
+    plan: free
+    buildCommand: echo "No build needed"
+    startCommand: node backend/server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
